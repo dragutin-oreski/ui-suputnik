@@ -1,6 +1,6 @@
 /* UI Suputnik — Susret 01
    Aesthetic: warm paper editorial.
-   Type: Fraunces (display serif, accent) + Manrope (UI sans) + JetBrains Mono (labels/data).
+   Type: Source Serif 4 (editorial serif, accent) + Manrope (UI sans) + JetBrains Mono (labels/data).
    Color: cream paper, ink, single muted ochre/teal accent. No purple gradients.
 */
 
@@ -33,7 +33,7 @@
   --warn: #8a3a1f;
   --warn-wash: #ecd6c8;
 
-  --serif: "Fraunces", "Iowan Old Style", "Hoefler Text", Georgia, serif;
+  --serif: "Source Serif 4", "Iowan Old Style", "Charter", Georgia, serif;
   --sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 

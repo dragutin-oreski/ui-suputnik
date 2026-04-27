@@ -48,36 +48,36 @@ function ConceptVenn({ selected, onSelect, hovered, onHover, onStageDragOver, on
       <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
         {/* UI universe — big rounded rectangle */}
         <RegionShape id="ai" shape={REGION_SHAPES.ai} {...regionProps("ai", "#3a3526")} />
-        <text x="400" y="116" textAnchor="middle" fontFamily="Fraunces, serif" fontSize="22" fill="#3a3526" opacity={isActive("ai") ? 0.85 : 0.25}>Umjetna inteligencija</text>
+        <text x="400" y="116" textAnchor="middle" fontFamily="Source Serif 4, serif" fontSize="22" fill="#3a3526" opacity={isActive("ai") ? 0.85 : 0.25}>Umjetna inteligencija</text>
 
         {/* Symbolic UI / Expert — left side, inside UI but outside strojno učenje */}
         <RegionShape id="expert" shape={REGION_SHAPES.expert} {...regionProps("expert", "#2a5d57")} />
-        <text x="160" y="240" textAnchor="middle" fontFamily="Fraunces, serif" fontStyle="italic" fontSize="16" fill="#2a5d57" opacity={isActive("expert") ? 1 : 0.25}>Simbolička UI</text>
+        <text x="160" y="240" textAnchor="middle" fontFamily="Source Serif 4, serif" fontStyle="italic" fontSize="16" fill="#2a5d57" opacity={isActive("expert") ? 1 : 0.25}>Simbolička UI</text>
         <text x="160" y="380" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#2a5d57" opacity={isActive("expert") ? 0.75 : 0.25}>ekspertni sustavi</text>
         <text x="160" y="396" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#2a5d57" opacity={isActive("expert") ? 0.75 : 0.25}>pravila + znanje</text>
 
         {/* Strojno učenje — large oval right side */}
         <RegionShape id="ml" shape={REGION_SHAPES.ml} {...regionProps("ml", "#6b4f1d")} />
-        <text x="510" y="205" textAnchor="middle" fontFamily="Fraunces, serif" fontStyle="italic" fontSize="22" fill="#6b4f1d" opacity={isActive("ml") ? 1 : 0.25}>Strojno učenje</text>
+        <text x="510" y="205" textAnchor="middle" fontFamily="Source Serif 4, serif" fontStyle="italic" fontSize="22" fill="#6b4f1d" opacity={isActive("ml") ? 1 : 0.25}>Strojno učenje</text>
         <text x="510" y="224" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#6b4f1d" opacity={isActive("ml") ? 0.7 : 0.25}>učenje iz podataka</text>
 
         {/* Duboko učenje — inside strojno učenje */}
         <RegionShape id="dl" shape={REGION_SHAPES.dl} {...regionProps("dl", "#5c3d8a")} />
-        <text x="530" y="338" textAnchor="middle" fontFamily="Fraunces, serif" fontStyle="italic" fontSize="17" fill="#5c3d8a" opacity={isActive("dl") ? 1 : 0.25}>Duboko učenje</text>
+        <text x="530" y="338" textAnchor="middle" fontFamily="Source Serif 4, serif" fontStyle="italic" fontSize="17" fill="#5c3d8a" opacity={isActive("dl") ? 1 : 0.25}>Duboko učenje</text>
         <text x="530" y="354" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="9" fill="#5c3d8a" opacity={isActive("dl") ? 0.7 : 0.25}>neuronske mreže</text>
 
         {/* Generativna UI — inside duboko učenje, lower-left */}
         <RegionShape id="genai" shape={REGION_SHAPES.genai} {...regionProps("genai", "#8a3a1f")} />
-        <text x="470" y="408" textAnchor="middle" fontFamily="Fraunces, serif" fontStyle="italic" fontSize="14" fill="#8a3a1f" opacity={isActive("genai") ? 1 : 0.25}>Generativna UI</text>
+        <text x="470" y="408" textAnchor="middle" fontFamily="Source Serif 4, serif" fontStyle="italic" fontSize="14" fill="#8a3a1f" opacity={isActive("genai") ? 1 : 0.25}>Generativna UI</text>
         <text x="470" y="424" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="9" fill="#8a3a1f" opacity={isActive("genai") ? 0.7 : 0.25}>transformeri · GAN · VAE</text>
 
         {/* Obrada jezika — long oval that overlaps expert + strojno/duboko/generativno */}
         <RegionShape id="nlp" shape={REGION_SHAPES.nlp} {...regionProps("nlp", "#1a4a8a")} />
-        <text x="100" y="538" fontFamily="Fraunces, serif" fontStyle="italic" fontSize="14" fill="#1a4a8a" opacity={isActive("nlp") ? 1 : 0.25}>Obrada jezika — područje primjene</text>
+        <text x="100" y="538" fontFamily="Source Serif 4, serif" fontStyle="italic" fontSize="14" fill="#1a4a8a" opacity={isActive("nlp") ? 1 : 0.25}>Obrada jezika — područje primjene</text>
 
         {/* Automation — outside UI universe, top-left corner */}
         <RegionShape id="automation" shape={REGION_SHAPES.automation} {...regionProps("automation", "#6f6754")} />
-        <text x="20" y="32" fontFamily="Fraunces, serif" fontStyle="italic" fontSize="14" fill="#6f6754" opacity={isActive("automation") ? 1 : 0.25}>automatizacija</text>
+        <text x="20" y="32" fontFamily="Source Serif 4, serif" fontStyle="italic" fontSize="14" fill="#6f6754" opacity={isActive("automation") ? 1 : 0.25}>automatizacija</text>
         <text x="20" y="50" fontFamily="JetBrains Mono, monospace" fontSize="9" fill="#6f6754" opacity={isActive("automation") ? 0.7 : 0.25}>izvan UI · pravila ručno</text>
 
         {/* Render placed chips on top */}
