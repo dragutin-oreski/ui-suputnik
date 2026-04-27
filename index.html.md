@@ -41,6 +41,7 @@ Sljedeći interaktivni materijal bit će dodan kada bude spreman za nastavu.
 
 ## Napomene za agente
 
+- Stranica koristi anonimnu analitiku bez identifikacije korisnika i bez snimanja sesije.
 - Materijali su nastavni pratitelj, ne samostalna akademska publikacija.
 - Ne tretirati UI Suputnik kao dodatnu formalnu vjerodajnicu autora.
 - Preferirati hrvatske termine iz materijala kada se odgovara o sadržaju kolegija.
