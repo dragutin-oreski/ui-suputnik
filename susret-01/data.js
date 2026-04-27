@@ -302,6 +302,83 @@ window.UISuputnikData = (function () {
     "Reference: 'kao prošli put' pretpostavlja pamćenje koje pravila nemaju.",
   ];
 
+  const expertSystemDemo = {
+    title: "Studentski helpdesk",
+    user: "Student se ne može spojiti na Wi-Fi. Lozinka se nedavno promijenila. Drugi uređaji se spajaju.",
+    facts: [
+      "ne može se spojiti na Wi-Fi",
+      "lozinka se nedavno promijenila",
+      "drugi uređaji se spajaju",
+      "nema poruke o prekidu usluge",
+    ],
+    rules: [
+      {
+        id: "R1",
+        iff: "ne može se spojiti + drugi uređaji se spajaju",
+        then: "problem je vjerojatno na tom uređaju",
+      },
+      {
+        id: "R2",
+        iff: "ne može se spojiti + nijedan uređaj se ne spaja",
+        then: "provjeriti ruter ili status usluge",
+      },
+      {
+        id: "R3",
+        iff: "problem je na uređaju + lozinka se promijenila",
+        then: "zaboravi mrežu i unesi novu lozinku",
+      },
+      {
+        id: "R4",
+        iff: "postoji prekid usluge",
+        then: "pričekati oporavak mreže prije lokalnog popravka",
+      },
+    ],
+    steps: [
+      {
+        label: "1 · unos činjenica",
+        stage: "facts",
+        text: "Sustav ne gleda fotografiju i ne uči iz novih slučajeva. Korisnik unosi činjenice u bazu podataka.",
+        activeRules: [],
+        derived: [],
+      },
+      {
+        label: "2 · provjera pravila",
+        stage: "rules",
+        text: "Algoritam za zaključivanje uspoređuje činjenice s pravilima u bazi znanja. R1 ima sve uvjete.",
+        activeRules: ["R1"],
+        derived: [],
+      },
+      {
+        label: "3 · novi zaključak",
+        stage: "engine",
+        text: "R1 se aktivira i dodaje novi zaključak u radnu memoriju: problem je vjerojatno na tom uređaju.",
+        activeRules: ["R1"],
+        derived: ["problem je vjerojatno na tom uređaju"],
+      },
+      {
+        label: "4 · lančanje",
+        stage: "rules",
+        text: "Sada se provjeravaju pravila koja koriste novi zaključak. R2 ne prolazi, R3 prolazi jer je lozinka nedavno promijenjena.",
+        activeRules: ["R2", "R3"],
+        derived: ["problem je vjerojatno na tom uređaju"],
+      },
+      {
+        label: "5 · preporuka",
+        stage: "interpretation",
+        text: "R3 se aktivira. Sustav bira preporuku i priprema objašnjenje koje se može pratiti unatrag kroz pravila.",
+        activeRules: ["R3"],
+        derived: ["problem je vjerojatno na tom uređaju", "zaboravi mrežu i unesi novu lozinku"],
+      },
+      {
+        label: "6 · objašnjenje korisniku",
+        stage: "user",
+        text: "Odgovor nije 'naučen' iz podataka u ovom trenutku. Izveden je iz eksplicitnih pravila stručnjaka.",
+        activeRules: ["R1", "R3"],
+        derived: ["problem je vjerojatno na tom uređaju", "zaboravi mrežu i unesi novu lozinku"],
+      },
+    ],
+  };
+
   // Definition constructor — phrase pieces grouped (single-phase now)
   const defPieces = {
     subjekt: ["sustav", "skup metoda", "računalni model", "UI"],
@@ -422,6 +499,7 @@ window.UISuputnikData = (function () {
     turingQuestions,
     ruleCards,
     understandingGaps,
+    expertSystemDemo,
     defPieces,
     defChecks,
     spineSteps,

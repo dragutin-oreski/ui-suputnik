@@ -405,5 +405,110 @@ function SignalnaPloca() {
   );
 }
 
+function ExpertSystemDemo() {
+  const demo = D.expertSystemDemo;
+  const [stepIdx, setStepIdx] = React.useState(0);
+  const [playing, setPlaying] = React.useState(false);
+  const step = demo.steps[stepIdx];
+  const isLast = stepIdx === demo.steps.length - 1;
+
+  React.useEffect(() => {
+    if (!playing) return;
+    const id = setTimeout(() => {
+      if (isLast) {
+        setPlaying(false);
+      } else {
+        setStepIdx((i) => i + 1);
+      }
+    }, stepIdx === 0 ? 900 : 1400);
+    return () => clearTimeout(id);
+  }, [playing, stepIdx, isLast]);
+
+  const goNext = () => {
+    setPlaying(false);
+    setStepIdx((i) => (i >= demo.steps.length - 1 ? 0 : i + 1));
+  };
+
+  const run = () => {
+    setStepIdx(0);
+    setPlaying(true);
+  };
+
+  const visibleDerived = step.derived || [];
+  const activeRuleSet = new Set(step.activeRules || []);
+  const stages = [
+    { id: "facts", label: "Baza podataka", detail: "činjenice iz upitnika" },
+    { id: "rules", label: "Baza znanja", detail: "pravila stručnjaka" },
+    { id: "engine", label: "Zaključivanje", detail: "traži pravilo koje vrijedi" },
+    { id: "interpretation", label: "Interpretacija", detail: "slaže trag odluke" },
+    { id: "user", label: "Korisnik", detail: "dobiva preporuku" },
+  ];
+
+  return (
+    <div className="expert-demo">
+      <div className="expert-demo-head">
+        <div>
+          <span className="kicker kicker--accent">Ekspertni sustav · primjer u hodu</span>
+          <h3 style={{ marginTop: 6 }}>Kako pravila postanu preporuka?</h3>
+          <p>
+            Primjer pokazuje ulančavanje unaprijed: činjenice ulaze u radnu memoriju, pravila se provjeravaju, a svaki novi zaključak može aktivirati sljedeće pravilo.
+          </p>
+        </div>
+        <div className="expert-demo-actions">
+          <button className="btn" onClick={run}>{playing ? "Ponovno" : "Pokreni"}</button>
+          <button className="btn btn--ghost" onClick={goNext}>{isLast ? "Reset" : "Korak"}</button>
+        </div>
+      </div>
+
+      <div className="expert-flow" aria-label="Tok ekspertnog sustava">
+        {stages.map((s, i) => (
+          <React.Fragment key={s.id}>
+            <div className={`expert-node ${step.stage === s.id ? "active" : ""}`}>
+              <span>{s.label}</span>
+              <small>{s.detail}</small>
+            </div>
+            {i < stages.length - 1 && <span className={`expert-arrow ${step.stage === stages[i + 1].id ? "active" : ""}`}></span>}
+          </React.Fragment>
+        ))}
+      </div>
+
+      <div className="expert-lab">
+        <div className={`expert-panel ${step.stage === "facts" ? "active" : ""}`}>
+          <h4>Radna memorija</h4>
+          <p className="expert-user-case">{demo.user}</p>
+          <ul className="expert-facts">
+            {demo.facts.map((f) => <li key={f}>{f}</li>)}
+            {visibleDerived.map((f) => <li key={f} className="derived">{f}</li>)}
+          </ul>
+        </div>
+
+        <div className={`expert-panel ${step.stage === "rules" || step.stage === "engine" ? "active" : ""}`}>
+          <h4>Baza znanja</h4>
+          <div className="expert-rules">
+            {demo.rules.map((r) => (
+              <div key={r.id} className={`expert-rule ${activeRuleSet.has(r.id) ? "active" : ""}`}>
+                <span className="expert-rule-id">{r.id}</span>
+                <span><strong>AKO</strong> {r.iff}</span>
+                <span><strong>ONDA</strong> {r.then}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className={`expert-panel expert-panel--trace ${step.stage === "interpretation" || step.stage === "user" ? "active" : ""}`}>
+          <h4>Trag zaključivanja</h4>
+          <span className="expert-step-label">{step.label}</span>
+          <p>{step.text}</p>
+          <div className="expert-result">
+            <span className="kicker">Izlaz</span>
+            <strong>{visibleDerived[visibleDerived.length - 1] || "još nema zaključka"}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 window.MrezaPanel = MrezaPanel;
 window.SignalnaPloca = SignalnaPloca;
+window.ExpertSystemDemo = ExpertSystemDemo;

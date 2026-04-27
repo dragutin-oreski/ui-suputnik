@@ -110,6 +110,7 @@ function App() {
         </div>
 
         {tweaks.concept_map_mode === "venn" ? <MrezaPanel /> : <ConceptListAlt />}
+        <ExpertSystemDemo />
         <SignalnaPloca />
       </section>
 

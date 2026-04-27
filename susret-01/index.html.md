@@ -29,6 +29,8 @@ Svaki novi sustav prolazi kroz isti obrazac:
 
 UI nije jedna stvar. Pojmovi su skupovi: neki su unutar drugih, neki ih presijecaju. Modul objašnjava odnose između automatizacije, UI-ja, simboličke UI, strojnog učenja, dubokog učenja, generativne UI i obrade jezika.
 
+Modul uključuje animirani primjer ekspertnog sustava: studentski helpdesk za Wi-Fi. Činjenice ulaze u radnu memoriju, pravila iz baze znanja se provjeravaju, algoritam za zaključivanje aktivira pravila R1 i R3, a korisnik dobiva preporuku s objašnjenjem.
+
 ### 02 - Sortirnica: UI Ili Nije UI?
 
 Studenti razvrstavaju primjere u kategorije. Točni i pogrešni odabiri tvore matricu zabune, kao uvod u način razmišljanja o pogreškama modela.
@@ -70,6 +72,8 @@ Pitanje za provjeru: tko je napisao pravilo - čovjek ili podaci?
 Simbolička UI koristi bazu znanja i pravila zaključivanja koje je strukturirao čovjek. Izgleda pametno jer slijedi stručnu logiku, ali tipično ne uči sama iz novih primjera.
 
 Primjer: medicinski upitnik koji prema pravilima predlaže moguću dijagnozu.
+
+Interaktivni primjer: ako student ne može spojiti uređaj na Wi-Fi, drugi uređaji rade, a lozinka se nedavno promijenila, ekspertni sustav zaključuje da je problem vjerojatno na uređaju i preporučuje zaboraviti mrežu te unijeti novu lozinku.
 
 Pitanje za provjeru: mogu li pravila objasniti svaku odluku?
 
