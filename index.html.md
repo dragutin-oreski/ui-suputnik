@@ -35,9 +35,12 @@ Svaki susret koristi isti ritam: pojam, primjer, granica, odluka. Cilj nije zapa
 - Opis: razlikovanje automatizacije, simboličke UI, strojnog i dubokog učenja, generativne UI i obrade prirodnog jezika.
 - Teme: UI, strojno učenje, duboko učenje, obrada jezika.
 
-### Sljedeći susret
+### Susret 02 - Regresija i klasteriranje
 
-Sljedeći interaktivni materijal bit će dodan kada bude spreman za nastavu.
+- URL: https://dragutinoreski.com/courses/ui-suputnik/susret-02/
+- Markdown mirror: https://dragutinoreski.com/courses/ui-suputnik/susret-02/index.html.md
+- Opis: intuitivno crtanje pravca kroz točke i vizualizacija K-means klasteriranja kroz centroide, dodjelu točaka i inerciju.
+- Teme: kreditni scoring, linearna regresija, SSE, K-means, klasteriranje, PII-NER, segmentacija slike, Hugging Face primjeri.
 
 ## Napomene za agente
 
