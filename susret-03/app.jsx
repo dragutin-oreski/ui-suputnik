@@ -1161,8 +1161,8 @@ function MatrixGrid({ data, compact = false, showNumbers = true, active = null, 
 function EdgeMapNote() {
   return (
     <div className="edge-map-note">
-      <strong>Nije obrnuto:</strong> ovo nije rekonstruirana slika kruga, nego mapa odziva filtera.
-      Tamna sredina znači “nema promjene”, a svijetli prsten znači “ovdje se intenzitet naglo mijenja”.
+      <strong>Nije obrnuto:</strong> ovo nije rekonstruirana slika objekta, nego mapa odziva filtera.
+      Tamna područja znače “nema velike promjene”, a svijetla područja znače “ovdje se intenzitet naglo mijenja”.
       Za rubove prikazujemo jačinu odziva, pa su i pozitivni i negativni rubovi nacrtani svijetlo.
     </div>
   );
@@ -1211,6 +1211,12 @@ function StepConvolutionDemo() {
   const j = pos % outCols;
   const fullOut = matrixConvolve(image, kernelDef);
   const partial = Array.from({ length: outRows }, (_, r) => Array.from({ length: outCols }, (_, c) => (r * outCols + c < pos ? fullOut[r][c] : 127)));
+  const finishText = {
+    circle: "Gotovo: izračunata je cijela mapa rubova. Zato popunjeni krug završi kao prsten aktivacija.",
+    smiley: "Gotovo: izračunata je cijela mapa rubova. Zato smješko završi kao rub lica, oči i usta.",
+    vline: "Gotovo: izračunata je cijela mapa rubova. Zato linija završi kao dva ruba: lijevi i desni.",
+    square: "Gotovo: izračunata je cijela mapa rubova. Zato kvadrat završi kao okvir aktivacija.",
+  }[imageKey];
 
   useEffect(() => {
     if (!running) return undefined;
@@ -1281,7 +1287,7 @@ function StepConvolutionDemo() {
           <>
             <strong>Račun za out[{i}][{j}]:</strong> {terms.join(" + ")} = {sum}{kernelDef.div !== 1 ? ` ÷ ${kernelDef.div} = ${Math.round(result)}` : ` → ${Math.round(result)}`}
           </>
-        ) : <strong>Gotovo: izračunata je cijela mapa rubova. Zato krug završi kao prsten, a ne kao popunjeni krug.</strong>}
+        ) : <strong>{finishText}</strong>}
       </div>
     </section>
   );
@@ -1305,7 +1311,7 @@ function WhyCircleDemo() {
             <h4>{label}</h4>
             <div className="mini-pair">
               <MatrixGrid data={img} compact showNumbers={false} />
-              <span>→</span>
+              <span>↓ Laplacian</span>
               <MatrixGrid data={matrixConvolve(img, MATRIX_KERNELS.laplacian)} compact showNumbers={false} />
             </div>
             <p>{note}</p>
