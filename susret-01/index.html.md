@@ -81,7 +81,7 @@ Pitanje za provjeru: mogu li pravila objasniti svaku odluku?
 
 Strojno učenje uči obrasce iz primjera. Umjesto da čovjek napiše sva pravila, model koristi podatke kako bi predviđao, klasificirao ili preporučivao.
 
-Primjer: spam filter treniran na označenim porukama ili model za predviđanje churn-a.
+Primjer: filtar neželjene pošte treniran na označenim porukama ili model za predviđanje odlaska korisnika.
 
 Pitanje za provjeru: koji su podaci, koja je oznaka, koja je metrika?
 
@@ -119,7 +119,7 @@ Pitanje za provjeru: je li sustav razumio značenje ili je samo prepoznao riječ
 - Model koji prepoznaje tumor na slici: duboko učenje.
 - Google Translate: obrada prirodnog jezika, često pokretana dubokim učenjem.
 - FAQ chatbot po ključnim riječima: ekspertni sustav / pravila.
-- Random forest za predviđanje odlaska korisnika: strojno učenje.
+- Slučajna šuma za predviđanje odlaska korisnika: strojno učenje.
 - Provjera duljine lozinke: automatizacija.
 - Netflix preporuke: strojno učenje.
 - Otključavanje telefona licem: duboko učenje.

@@ -39,8 +39,15 @@ Svaki susret koristi isti ritam: pojam, primjer, granica, odluka. Cilj nije zapa
 
 - URL: https://dragutinoreski.com/courses/ui-suputnik/susret-02/
 - Markdown mirror: https://dragutinoreski.com/courses/ui-suputnik/susret-02/index.html.md
-- Opis: intuitivno crtanje pravca kroz točke i vizualizacija K-means klasteriranja kroz centroide, dodjelu točaka i inerciju.
-- Teme: kreditni scoring, linearna regresija, SSE, K-means, klasteriranje, PII-NER, segmentacija slike, Hugging Face primjeri.
+- Opis: intuitivno crtanje pravca kroz točke i vizualizacija metode K-sredina kroz središta, dodjelu točaka i inerciju.
+- Teme: kreditna procjena, linearna regresija, zbroj kvadriranih pogrešaka, K-sredine, klasteriranje, prepoznavanje osobnih podataka, segmentacija slike, Hugging Face primjeri.
+
+### Susret 05 - Strojno učenje i pristranost
+
+- URL: https://dragutinoreski.com/courses/ui-suputnik/susret-05/
+- Markdown mirror: https://dragutinoreski.com/courses/ui-suputnik/susret-05/index.html.md
+- Opis: interaktive za polaznike za istraživanje poslovnih primjera strojnog učenja, pristranosti preživjelih, pristrane kreditne procjene, paradoksa točnosti i povratne petlje.
+- Teme: strojno učenje, znanost o podacima, duboko učenje, preporuke, odlazak korisnika, kreditna procjena, pristranost, nerazmjeran učinak, neuravnotežene klase, povratna petlja.
 
 ## Napomene za agente
 

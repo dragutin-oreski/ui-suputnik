@@ -38,7 +38,7 @@ window.UISuputnikData = (function () {
       relation: "strojno učenje ⊂ UI · duboko učenje ⊂ strojno učenje",
       desc:
         "Strojno učenje uči obrasce iz primjera. Umjesto da čovjek napiše sva pravila, model koristi podatke kako bi predviđao, klasificirao ili preporučivao.",
-      example: "Spam filter treniran na označenim porukama; model za predviđanje churn-a.",
+      example: "Filtar neželjene pošte treniran na označenim porukama; model za predviđanje odlaska korisnika.",
       contrast: "Strojno učenje nije samo tablica pravila; ponašanje proizlazi iz naučenog obrasca u podacima.",
       pitanje: "Koji su podaci, koja je oznaka, koja je metrika?",
     },
@@ -173,12 +173,12 @@ window.UISuputnikData = (function () {
     },
     {
       id: "q-rf",
-      title: "Random forest predviđa odlazak korisnika",
+      title: "Slučajna šuma predviđa odlazak korisnika",
       text: "Mnoga stabla glasaju na temelju povijesnih podataka.",
       answer: "ml",
       signals: ["ansambl", "predikcija"],
       feedback: "Strojno učenje — ansambl stabala uči iz podataka.",
-      takeaway: "Random forest = obitelj modela strojnog učenja.",
+      takeaway: "Slučajna šuma = obitelj modela strojnog učenja.",
     },
     {
       id: "q-pwd",
@@ -427,13 +427,13 @@ window.UISuputnikData = (function () {
 
   const roadmap = [
     { klasa: "Susret 01", title: "Uvod (ovdje smo)", spine: "problem", here: true },
-    { klasa: "Susret 02", title: "Credit scoring simulator", spine: "odluka" },
-    { klasa: "Susret 03", title: "GA + CNN + prompt", spine: "metoda" },
+    { klasa: "Susret 02", title: "Simulator kreditne procjene", spine: "odluka" },
+    { klasa: "Susret 03", title: "GA + CNN + uputa", spine: "metoda" },
     { klasa: "Susret 04", title: "Sličnost i udaljenosti", spine: "metoda" },
-    { klasa: "Susret 06", title: "Stabla & Random Forest", spine: "metoda" },
-    { klasa: "Susret 07", title: "Supervised vs Unsupervised", spine: "metoda" },
+    { klasa: "Susret 06", title: "Stabla i slučajna šuma", spine: "metoda" },
+    { klasa: "Susret 07", title: "Nadzirano i nenadzirano", spine: "metoda" },
     { klasa: "Susret 08", title: "K-means animacija", spine: "metoda" },
-    { klasa: "Susret 09", title: "Data audit", spine: "podaci" },
+    { klasa: "Susret 09", title: "Revizija podataka", spine: "podaci" },
     { klasa: "Susret 10", title: "Skaliranje i outlieri", spine: "podaci" },
     { klasa: "Susret 11", title: "Pipeline obrade jezika", spine: "metoda" },
     { klasa: "Susret 12", title: "Tokeni i sentiment", spine: "podaci" },

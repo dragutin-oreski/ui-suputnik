@@ -2,8 +2,8 @@
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Susret 03 — Genetski algoritmi, računalni vid (CNN) i GenAI
-   Three live demos for in-class use.
+   Susret 03 — Genetski algoritmi, računalni vid i generativna UI
+   Tri interaktivna primjera za vježbu pojmova.
    ────────────────────────────────────────────────────────────────────────── */
 
 function App() {
@@ -37,7 +37,7 @@ function App() {
       <nav className="tabs" role="tablist">
         <button className={"tab" + (tab === "ga" ? " is-active" : "")} onClick={() => setTab("ga")}>1 · Genetski algoritam</button>
         <button className={"tab" + (tab === "cv" ? " is-active" : "")} onClick={() => setTab("cv")}>2 · Konvolucije</button>
-        <button className={"tab" + (tab === "llm" ? " is-active" : "")} onClick={() => setTab("llm")}>3 · Sljedeći token</button>
+        <button className={"tab" + (tab === "llm" ? " is-active" : "")} onClick={() => setTab("llm")}>3 · Sljedeća jedinica</button>
       </nav>
 
       {tab === "ga" && <GADemo />}
@@ -1721,7 +1721,7 @@ function ConvDemo() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   3) NEXT-TOKEN PREDICTION & HALLUCINATION
+   3) PREDVIĐANJE SLJEDEĆE JEZIČNE JEDINICE I HALUCINACIJA
    ══════════════════════════════════════════════════════════════════════════ */
 
 const PROMPTS = [
@@ -1729,7 +1729,7 @@ const PROMPTS = [
     id: "zg",
     text: "Glavni grad Hrvatske je",
     type: "factual",
-    note: "Visoka koncentracija vjerojatnosti na jedan token — model je 'siguran'. Ovo je ono što želimo: činjenica je u trening skupu nebrojeno puta.",
+    note: "Visoka koncentracija vjerojatnosti na jednu jezičnu jedinicu — model je 'siguran'. Ovo je ono što želimo: činjenica je u skupu za treniranje nebrojeno puta.",
     dist: [
       { tok: " Zagreb", p: 0.962 },
       { tok: " najveći", p: 0.013 },
@@ -1757,7 +1757,7 @@ const PROMPTS = [
     id: "pizza",
     text: "Moja omiljena pizza je",
     type: "ambiguous",
-    note: "Prompt nema činjenični odgovor. Distribucija je široka — model nasumično bira nešto stilski razumno. Različiti pozivi → različiti odgovori.",
+    note: "Uputa nema činjenični odgovor. Distribucija je široka — model nasumično bira nešto stilski razumno. Različiti pozivi → različiti odgovori.",
     dist: [
       { tok: " margherita", p: 0.21 },
       { tok: " s", p: 0.18 },
@@ -1836,12 +1836,12 @@ function LLMDemo() {
     <div>
       <div className="section-intro">
         <p>
-          LLM je u srcu <em>predviđač sljedećeg tokena</em>. Za svaki ulazni tekst, model računa
-          vjerojatnost <strong>svih</strong> tokena iz svog rječnika i bira (uzima uzorak) sljedeći. Sve što LLM "radi" —
+          LLM je u srcu <em>predviđač sljedeće jezične jedinice</em>. Za svaki ulazni tekst, model računa
+          vjerojatnost <strong>svih</strong> jezičnih jedinica iz svog rječnika i bira sljedeću. Sve što LLM "radi" —
           razgovor, kod, sažimanje — svodi se na ponavljanje ovog koraka tisuću puta.
         </p>
         <div className="aside">
-          <strong>Što tražiti:</strong> kad je odgovor činjenica, distribucija je <em>uska</em> i top token ima &gt;90%
+          <strong>Što tražiti:</strong> kad je odgovor činjenica, distribucija je <em>uska</em> i najvjerojatnija jezična jedinica ima &gt;90%
           mase. Kad činjenice nema (4. primjer dolje — film koji ne postoji), distribucija je <em>široka</em> — to je
           trenutak halucinacije.
         </div>
@@ -1849,7 +1849,7 @@ function LLMDemo() {
 
       <div className="panel">
         <div className="control">
-          <div className="control-label"><span>Primjer prompta</span></div>
+          <div className="control-label"><span>Primjer upute</span></div>
           <select value={promptIdx} onChange={(e) => setPromptIdx(+e.target.value)}>
             {PROMPTS.map((p, i) => <option key={p.id} value={i}>{i + 1}. {p.text}</option>)}
           </select>
@@ -1861,9 +1861,9 @@ function LLMDemo() {
           {!picked && <span style={{ color: "var(--muted)" }}><span style={{ animation: "blink 1s infinite" }}>▮</span></span>}
         </div>
 
-        <h3 style={{ marginTop: 22, marginBottom: 6 }}>Distribucija sljedećeg tokena</h3>
+        <h3 style={{ marginTop: 22, marginBottom: 6 }}>Distribucija sljedeće jezične jedinice</h3>
         <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>
-          Top {prompt.dist.length} tokena prema vjerojatnosti.
+          Prvih {prompt.dist.length} jezičnih jedinica prema vjerojatnosti.
         </p>
 
         <div className="bars">
@@ -1880,13 +1880,13 @@ function LLMDemo() {
 
         <div className="actions">
           <button className="btn primary" onClick={sample}>Uzmi uzorak (slučajno)</button>
-          <button className="btn" onClick={greedy}>Najvjerojatniji (greedy)</button>
+          <button className="btn" onClick={greedy}>Najvjerojatnija jedinica</button>
           <button className="btn" onClick={() => { setGenerated(""); setPicked(null); }}>Resetiraj</button>
         </div>
 
         <div className={"callout" + (prompt.type === "hallucination" ? " warn" : "")}>
-          {prompt.type === "factual" && <><strong>Činjenični prompt.</strong> Distribucija je uska, model "zna" odgovor jer je nebrojeno puta vidio sličan obrazac u trening skupu.</>}
-          {prompt.type === "ambiguous" && <><strong>Dvosmislen prompt.</strong> Nema "točnog" odgovora — model bira nešto stilski razumno. Dvije konzultacije s istim modelom mogu dati različite odgovore.</>}
+          {prompt.type === "factual" && <><strong>Činjenična uputa.</strong> Distribucija je uska, model "zna" odgovor jer je nebrojeno puta vidio sličan obrazac u skupu za treniranje.</>}
+          {prompt.type === "ambiguous" && <><strong>Dvosmislena uputa.</strong> Nema "točnog" odgovora — model bira nešto stilski razumno. Dvije konzultacije s istim modelom mogu dati različite odgovore.</>}
           {prompt.type === "hallucination" && <><strong>Halucinacija.</strong> Film ne postoji — ali model je naučio da nakon "zove se" dolazi ime. Bira <em>najuvjerljivije</em> ime, ne <em>točno</em>. To je halucinacija u klasičnom obliku: uvjerljiv ton, nula veze sa stvarnošću.</>}
           {" "}{prompt.note}
         </div>
@@ -1896,13 +1896,13 @@ function LLMDemo() {
         <h3 style={{ marginBottom: 10 }}>Što ovo znači u praksi</h3>
         <dl className="kv">
           <dt>Bez "ne znam"</dt>
-          <dd>Model ne razlikuje "siguran sam" od "izmišljam". On uvijek vraća sljedeći najvjerojatniji token. Kontroliraš ga <em>strukturom prompta</em>.</dd>
+          <dd>Model ne razlikuje "siguran sam" od "izmišljam". On uvijek vraća sljedeću najvjerojatniju jezičnu jedinicu. Kontroliraš ga <em>strukturom upute</em>.</dd>
           <dt>Ekspert vs. laik</dt>
           <dd>Kad si stručnjak za temu, halucinaciju vidiš odmah. Kad nisi — odgovor zvuči autoritativno čak i kad griješi.</dd>
           <dt>Temperatura</dt>
-          <dd>Parametar koji "ravna" distribuciju. Niska (0–0.2) → uvijek bira top token, deterministički. Visoka (1.0+) → kreativnije, ali rizičnije.</dd>
+          <dd>Parametar koji "ravna" distribuciju. Niska (0–0.2) → uvijek bira najvjerojatniju jedinicu, deterministički. Visoka (1.0+) → kreativnije, ali rizičnije.</dd>
           <dt>RAG</dt>
-          <dd>Rješenje za činjenice: prije generiranja, sustav <em>dohvati</em> relevantne dokumente i ubaci ih u prompt. Tada distribucija "zna" gdje gledati.</dd>
+          <dd>Rješenje za činjenice: prije generiranja, sustav <em>dohvati</em> relevantne dokumente i ubaci ih u uputu. Tada distribucija "zna" gdje gledati.</dd>
         </dl>
       </div>
 
@@ -1925,7 +1925,7 @@ function TrainingUsageDemo() {
         trainCost: "$50-200M+",
         trainTime: "tjedni do mjeseci",
         hardware: "tisuće GPU/TPU akceleratora",
-        artifact: "model weights: stotine GB do TB",
+        artifact: "težine modela: stotine GB do TB",
         useCost: "$0.001-0.10 po pozivu",
         latency: "sekunde",
         useHardware: "dijeljeni GPU kapacitet",
@@ -1934,7 +1934,7 @@ function TrainingUsageDemo() {
         trainCost: "$10k-500k",
         trainTime: "sati do tjedni",
         hardware: "1-100 GPU-a",
-        artifact: "model weights: 5-30 GB",
+        artifact: "težine modela: 5-30 GB",
         useCost: "centi ili manje po pozivu",
         latency: "lokalno ili mali server",
         useHardware: "jedan GPU ili CPU za manje modele",
@@ -1947,11 +1947,11 @@ function TrainingUsageDemo() {
           <h3>Trening nije isto što i korištenje</h3>
           <p>
             Najvažnija ekonomska razlika: jednom se skupo trenira model, zatim se milijune puta relativno jeftino koristi.
-            Zato većina tvrtki neće trenirati vlastiti frontier model, nego koristi API, RAG, evaluacije i eventualno fine-tuning.
+            Zato većina tvrtki neće trenirati vlastiti najsnažniji model, nego koristi programsko sučelje, dohvat dokumenata, evaluacije i eventualno dodatno podešavanje.
           </p>
         </div>
         <div className="segmented" role="group" aria-label="Tip modela">
-          <button className={mode === "frontier" ? "is-active" : ""} onClick={() => setMode("frontier")}>frontier</button>
+          <button className={mode === "frontier" ? "is-active" : ""} onClick={() => setMode("frontier")}>najsnažniji</button>
           <button className={mode === "small" ? "is-active" : ""} onClick={() => setMode("small")}>manji model</button>
         </div>
       </div>
@@ -1967,23 +1967,23 @@ function TrainingUsageDemo() {
         <article>
           <span className="stage-label">Inferencija</span>
           <strong>{values.useCost}</strong>
-          <p>{values.latency}; {values.useHardware}. Model generira odgovor token po token.</p>
-          <small>cijena raste s duljinom prompta i odgovora</small>
+          <p>{values.latency}; {values.useHardware}. Model generira odgovor jednu jezičnu jedinicu po jednu.</p>
+          <small>cijena raste s duljinom upute i odgovora</small>
         </article>
       </div>
 
       <div className="callout">
         <strong>Analogija:</strong> trening je kao školovanje stručnjaka na velikoj količini literature i zadataka.
         Inferencija je kao da tog stručnjaka pitate jedno pitanje. Pitanje je mnogo jeftinije od školovanja,
-        ali kvaliteta odgovora i dalje ovisi o tome što je model naučio i što ste mu dali u promptu.
+        ali kvaliteta odgovora i dalje ovisi o tome što je model naučio i što ste mu dali u uputi.
       </div>
 
       <p className="source-line">
         Brojevi su redovi veličine, ne službene cijene pojedinih modela. Za javne procjene vidi
-        <a href="https://epoch.ai/data/notable-ai-models" target="_blank" rel="noopener"> Epoch AI model database</a> i
-        <a href="https://epoch.ai/blog/how-much-does-it-cost-to-train-frontier-ai-models" target="_blank" rel="noopener"> Epoch AI cost analysis</a>.
+        <a href="https://epoch.ai/data/notable-ai-models" target="_blank" rel="noopener"> bazu modela Epoch AI</a> i
+        <a href="https://epoch.ai/blog/how-much-does-it-cost-to-train-frontier-ai-models" target="_blank" rel="noopener"> analizu troškova Epoch AI</a>.
         Za API cijene provjeri aktualnu
-        <a href="https://openai.com/api/pricing/" target="_blank" rel="noopener"> OpenAI pricing stranicu</a>.
+        <a href="https://openai.com/api/pricing/" target="_blank" rel="noopener"> stranicu s cijenama OpenAI API-ja</a>.
       </p>
     </div>
   );
@@ -1991,15 +1991,15 @@ function TrainingUsageDemo() {
 
 const ALIGNMENT_STEPS = [
   {
-    title: "1. Pretraining",
-    tag: "base model",
+    title: "1. Predtreniranje",
+    tag: "osnovni model",
     copy: "Model čita ogromne količine teksta, koda, slika ili zvuka i uči obrasce: gramatiku, stil, činjenice, strukturu dokumenata i kod. Još nije nužno dobar asistent.",
     example: "Zna nastaviti rečenicu, ali može biti grub, opširan ili ne slijediti upute.",
   },
   {
     title: "2. SFT",
     tag: "upute",
-    copy: "Supervised fine-tuning koristi primjere dobrih pitanja i odgovora. Model uči format: odgovori korisno, jasno, u traženom tonu i strukturi.",
+    copy: "Nadzirano dodatno podešavanje koristi primjere dobrih pitanja i odgovora. Model uči format: odgovori korisno, jasno, u traženom tonu i strukturi.",
     example: "Pitanje → dobar odgovor koji je napisao ili pregledao čovjek.",
   },
   {
@@ -2021,10 +2021,10 @@ function AlignmentTimeline() {
   const step = ALIGNMENT_STEPS[active];
   return (
     <div className="panel">
-      <h3 style={{ marginBottom: 8 }}>Od base modela do asistenta</h3>
+      <h3 style={{ marginBottom: 8 }}>Od osnovnog modela do asistenta</h3>
       <p className="panel-copy">
         Na visokoj razini, model prvo uči jezik i obrasce, zatim se dodatno oblikuje da bude koristan asistent.
-        Fine-tuning mijenja težine modela; RAG ne mijenja težine, nego ubacuje dokumente u prompt.
+        Dodatno podešavanje mijenja težine modela; dohvat dokumenata ne mijenja težine, nego ubacuje dokumente u uputu.
       </p>
       <div className="timeline">
         {ALIGNMENT_STEPS.map((s, i) => (
@@ -2174,9 +2174,9 @@ function PromptPracticeDemo() {
     <div className="panel">
       <div className="panel-head">
         <div>
-          <h3>Vježba s promptovima: bolji primjeri</h3>
+          <h3>Vježba s uputama: bolji primjeri</h3>
           <p>
-            Usporedi loš i bolji prompt. U ovim primjerima greška nastaje prirodno:
+            Usporedi lošu i bolju uputu. U ovim primjerima greška nastaje prirodno:
             model može halucinirati, odgovoriti preopćenito ili pogađati podatke koje nema.
           </p>
         </div>
@@ -2189,16 +2189,16 @@ function PromptPracticeDemo() {
       </div>
       <div className="prompt-pair">
         <article>
-          <span className="stage-label">Loš prompt</span>
+          <span className="stage-label">Loša uputa</span>
           <p>{s.bad}</p>
         </article>
         <article>
-          <span className="stage-label">Bolji prompt</span>
+          <span className="stage-label">Bolja uputa</span>
           <p>{s.good}</p>
         </article>
       </div>
       <div className="callout">
-        <strong>Pouka:</strong> {s.lesson} Dobar prompt smanjuje dvosmislenost i modelu jasnije govori što smije, a što ne smije napraviti.
+        <strong>Pouka:</strong> {s.lesson} Dobra uputa smanjuje dvosmislenost i modelu jasnije govori što smije, a što ne smije napraviti.
       </div>
     </div>
   );
@@ -2212,7 +2212,7 @@ function PromptInjectionDemo() {
     <div className="panel">
       <div className="panel-head">
         <div>
-          <h3>Prompt injection: podaci nisu instrukcije</h3>
+          <h3>Ubacivanje uputa: podaci nisu instrukcije</h3>
           <p>
             Ako LLM čita korisnički sadržaj, napadač može u taj sadržaj ubaciti uputu. Sustav mora jasno odvojiti
             što su instrukcije aplikacije, a što su samo podaci koje treba obraditi.
@@ -2221,7 +2221,7 @@ function PromptInjectionDemo() {
         <label className="switch">
           <input type="checkbox" checked={protectedMode} onChange={(e) => setProtectedMode(e.target.checked)} />
           <span></span>
-          Zaštićeni prompt
+          Zaštićena uputa
         </label>
       </div>
       <div className="injection-grid">
