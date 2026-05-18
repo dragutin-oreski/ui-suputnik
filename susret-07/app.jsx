@@ -26,8 +26,8 @@ const TEACHING_PRESETS = [
     title: "Dijagonala kao ravna crta",
     metric: "euclidean",
     scaled: false,
-    target: { complaints: 2, satisfaction: 2, spend: 50 },
-    note: "Usporedi Korisnika A dijagonalno gore-desno i Korisnika B ravno gore. Ravna crta do A je malo kraća.",
+    target: { complaints: 3, satisfaction: 3, spend: 50 },
+    note: "Nova točka je blizu Korisniku A po obje osi. Ravna dijagonalna crta je kratka i lako se vidi na grafu.",
   },
   {
     id: "manhattan-demo",
@@ -36,7 +36,7 @@ const TEACHING_PRESETS = [
     metric: "manhattan",
     scaled: false,
     target: { complaints: 2, satisfaction: 2, spend: 50 },
-    note: "Isti raspored, ali sad se broje koraci po atributima. Put ravno gore do B ima manji zbroj razlika.",
+    note: "Nova točka je ispod Korisnika B. Manhattan čita put kao korake po osima, pa je zbroj razlika do B najmanji.",
   },
   {
     id: "chebyshev-demo",
@@ -44,8 +44,8 @@ const TEACHING_PRESETS = [
     title: "Najveći pojedinačni skok",
     metric: "chebyshev",
     scaled: false,
-    target: { complaints: 2, satisfaction: 2, spend: 50 },
-    note: "Gleda se najveća pojedinačna razlika. Kod A su najveći skokovi 2, a kod B je skok zadovoljstva 3.",
+    target: { complaints: 4, satisfaction: 2, spend: 50 },
+    note: "Nova točka je blizu Korisniku F jer nijedan pojedinačni atribut ne odskače puno. Chebyshev gleda najveći skok.",
   },
   {
     id: "scale-demo",
@@ -359,10 +359,10 @@ function TeachingPresets({ activePresetId, onApply }) {
     <section className="preset-panel" aria-label="Brzi primjeri za distance">
       <div>
         <span className="eyebrow">Brzi primjeri</span>
-        <h2>Usporedi distance na istim točkama</h2>
+        <h2>Postavi dobar primjer za distancu</h2>
         <p>
-          Prva tri gumba namjerno koriste iste vrijednosti novog korisnika. Tako se mijenja samo metrika:
-          ravna crta, zbroj koraka ili najveći pojedinačni skok. Gumb Skala koristi drugi primjer.
+          Svaki gumb postavlja vrijednosti koje najbolje pokazuju jednu ideju: ravnu crtu,
+          zbroj koraka, najveći pojedinačni skok ili utjecaj skale.
         </p>
       </div>
       <div className="preset-grid">

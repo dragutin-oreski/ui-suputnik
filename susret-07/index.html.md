@@ -21,7 +21,7 @@ Student može birati između četiri domene:
 - Iris: jedna točka je cvijet perunike, a cilj je klasificirati vrstu cvijeta.
 - Titanic: jedna točka je putnik, a cilj je procijeniti vjerojatnost preživljavanja uz oprez u interpretaciji.
 
-Iznad glavnog grafa postoje i brzi primjeri za distance. Prva tri gumba namjerno koriste iste vrijednosti novog korisnika u Churn primjeru; mijenja se samo definicija udaljenosti. Tako student može vidjeti kako isti raspored točaka daje drugi najbliži primjer kad se promijeni metrika. Gumb Skala koristi drugi skup vrijednosti.
+Iznad glavnog grafa postoje i brzi primjeri za distance. Svaki gumb postavlja Churn primjer na vrijednosti koje najbolje pokazuju jednu ideju: ravnu crtu, zbroj koraka po osima, najveći pojedinačni skok ili utjecaj skale.
 
 ## Tok Stranice
 
@@ -35,9 +35,9 @@ Student klizačima mijenja atribute nove točke. Promjena odmah utječe na rang 
 
 Student može i kliknuti brzi primjer:
 
-- Euklidska: isti raspored točaka pokazuje zašto dijagonalna ravna crta može biti kraća.
-- Manhattan: isti raspored točaka pokazuje zašto zbroj koraka po osima može izabrati drugog susjeda.
-- Chebyshev: isti raspored točaka pokazuje zašto najveći pojedinačni skok može promijeniti interpretaciju.
+- Euklidska: nova točka je blizu susjedu po obje osi pa se ravna dijagonalna udaljenost lako vidi.
+- Manhattan: nova točka pokazuje zbroj koraka po atributima.
+- Chebyshev: nova točka pokazuje da je važan najveći pojedinačni skok, a ne ukupni zbroj.
 - Skala: vrijednosti pokazuju kako veći numerički raspon može preuzeti izračun ako se atributi ne skaliraju.
 
 ### 3. Susjedi
