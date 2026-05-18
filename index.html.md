@@ -49,6 +49,13 @@ Svaki susret koristi isti ritam: pojam, primjer, granica, odluka. Cilj nije zapa
 - Opis: interaktive za polaznike za istraživanje poslovnih primjera strojnog učenja, pristranosti preživjelih, pristrane kreditne procjene, paradoksa točnosti i povratne petlje.
 - Teme: strojno učenje, znanost o podacima, duboko učenje, preporuke, odlazak korisnika, kreditna procjena, pristranost, nerazmjeran učinak, neuravnotežene klase, povratna petlja.
 
+### Susret 07 - Točke, susjedi i udaljenosti
+
+- URL: https://dragutinoreski.com/courses/ui-suputnik/susret-07/
+- Markdown mirror: https://dragutinoreski.com/courses/ui-suputnik/susret-07/index.html.md
+- Opis: interaktive za objašnjenje što točke predstavljaju u ML primjerima, kako radi najbliži susjed, što znače Euklidska, Manhattan i Chebyshev udaljenost, kako se čita matrica distance i zašto skaliranje mijenja susjede.
+- Teme: nadzirano učenje, nenadzirano učenje, najbliži susjed, udaljenosti, Chebyshev, preporuke, matrica distance, skaliranje.
+
 ## Napomene za agente
 
 - Stranica koristi anonimnu analitiku bez identifikacije korisnika i bez snimanja sesije.
