@@ -197,6 +197,7 @@ function App() {
   const [scenarioId, setScenarioId] = useState("churn");
   const [metric, setMetric] = useState("euclidean");
   const [scaled, setScaled] = useState(false);
+  const [activePresetId, setActivePresetId] = useState("euclidean-demo");
   const scenario = SCENARIOS.find((item) => item.id === scenarioId);
   const [target, setTarget] = useState(scenario.target);
 
@@ -210,12 +211,27 @@ function App() {
     setScenarioId(id);
     setTarget(next.target);
     setScaled(false);
+    setMetric("euclidean");
+    setActivePresetId(id === "churn" ? "euclidean-demo" : "");
   };
   const applyPreset = (preset) => {
     setScenarioId("churn");
     setTarget(preset.target);
     setMetric(preset.metric);
     setScaled(preset.scaled);
+    setActivePresetId(preset.id);
+  };
+  const updateTarget = (nextTarget) => {
+    setTarget(nextTarget);
+    setActivePresetId("");
+  };
+  const updateMetric = (nextMetric) => {
+    setMetric(nextMetric);
+    setActivePresetId("");
+  };
+  const updateScaled = (nextScaled) => {
+    setScaled(nextScaled);
+    setActivePresetId("");
   };
 
   return (
@@ -245,7 +261,7 @@ function App() {
 
       <main className="module">
         <ScenarioPicker scenario={scenario} onChange={selectScenario} />
-        <TeachingPresets onApply={applyPreset} />
+        <TeachingPresets activePresetId={activePresetId} onApply={applyPreset} />
         <ConceptStrip scenario={scenario} />
 
         <section className="workbench">
@@ -261,7 +277,7 @@ function App() {
                   key={feature.key}
                   feature={feature}
                   value={target[feature.key]}
-                  onChange={(value) => setTarget({ ...target, [feature.key]: value })}
+                  onChange={(value) => updateTarget({ ...target, [feature.key]: value })}
                 />
               ))}
             </div>
@@ -273,10 +289,10 @@ function App() {
                 <span className="eyebrow">Susjedi</span>
                 <h2>Najbliži primjeri</h2>
               </div>
-              <MetricControls metric={metric} setMetric={setMetric} />
+              <MetricControls metric={metric} setMetric={updateMetric} />
             </div>
             <label className="toggle">
-              <input type="checkbox" checked={scaled} onChange={(event) => setScaled(event.target.checked)} />
+              <input type="checkbox" checked={scaled} onChange={(event) => updateScaled(event.target.checked)} />
               <span>Skaliraj prije računanja distance</span>
             </label>
             <p className="projection-note">
@@ -338,20 +354,24 @@ function App() {
   );
 }
 
-function TeachingPresets({ onApply }) {
+function TeachingPresets({ activePresetId, onApply }) {
   return (
     <section className="preset-panel" aria-label="Brzi primjeri za distance">
       <div>
         <span className="eyebrow">Brzi primjeri</span>
-        <h2>Postavi dobar primjer za distancu</h2>
+        <h2>Usporedi distance na istim točkama</h2>
         <p>
-          Ovi gumbi namjerno postavljaju Churn primjer tako da se na grafu vidi razlika između ravne crte,
-          zbroja koraka i najvećeg pojedinačnog skoka.
+          Prva tri gumba namjerno koriste iste vrijednosti novog korisnika. Tako se mijenja samo metrika:
+          ravna crta, zbroj koraka ili najveći pojedinačni skok. Gumb Skala koristi drugi primjer.
         </p>
       </div>
       <div className="preset-grid">
         {TEACHING_PRESETS.map((preset) => (
-          <button key={preset.id} className="preset-button" onClick={() => onApply(preset)}>
+          <button
+            key={preset.id}
+            className={"preset-button" + (preset.id === activePresetId ? " is-active" : "")}
+            onClick={() => onApply(preset)}
+          >
             <span>{preset.label}</span>
             <strong>{preset.title}</strong>
             <small>{preset.note}</small>
