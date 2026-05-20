@@ -50,7 +50,7 @@ function App() {
   const [attributes, setAttributes] = useState(createInitialAttributes);
   const [candidates, setCandidates] = useState(createInitialCandidates);
   const [metric, setMetric] = useState("euclidean");
-  const [scaled, setScaled] = useState(true);
+  const [scaled, setScaled] = useState(false);
   const [tableMode, setTableMode] = useState("blank");
   const [selectedCandidateId, setSelectedCandidateId] = useState("");
 
@@ -144,7 +144,7 @@ function App() {
     setAttributes(createInitialAttributes());
     setCandidates(createInitialCandidates());
     setMetric("euclidean");
-    setScaled(true);
+    setScaled(false);
     setTableMode("blank");
     setSelectedCandidateId("");
   };
@@ -153,7 +153,7 @@ function App() {
     setAttributes(cloneRows(EXAMPLE_ATTRIBUTES));
     setCandidates(cloneRows(EXAMPLE_CANDIDATES));
     setMetric("euclidean");
-    setScaled(true);
+    setScaled(false);
     setTableMode("example");
     setSelectedCandidateId(EXAMPLE_CANDIDATES[0].id);
   };
@@ -210,7 +210,7 @@ function App() {
           </div>
           <label className="switch">
             <input type="checkbox" checked={scaled} onChange={(event) => setScaled(event.target.checked)} />
-            <span>Skaliraj</span>
+            <span>Skaliraj / ponderiraj</span>
           </label>
           <div className="mode-toggle" aria-label="Način rada tablice">
             <button className={tableMode === "blank" ? "is-active" : ""} onClick={resetTemplate}>Prazno</button>
@@ -266,20 +266,22 @@ function App() {
                       >
                         −
                       </button>
-                      <div className="attribute-meta">
-                        <label>
-                          min
-                          <input type="number" value={attr.min} onChange={(event) => updateAttribute(attr.id, "min", event.target.value)} />
-                        </label>
-                        <label>
-                          max
-                          <input type="number" value={attr.max} onChange={(event) => updateAttribute(attr.id, "max", event.target.value)} />
-                        </label>
-                        <label>
-                          važ.
-                          <input type="number" min="0.5" max="3" step="0.5" value={attr.weight} onChange={(event) => updateAttribute(attr.id, "weight", event.target.value)} />
-                        </label>
-                      </div>
+                      {scaled && (
+                        <div className="attribute-meta">
+                          <label>
+                            min
+                            <input type="number" value={attr.min} onChange={(event) => updateAttribute(attr.id, "min", event.target.value)} />
+                          </label>
+                          <label>
+                            max
+                            <input type="number" value={attr.max} onChange={(event) => updateAttribute(attr.id, "max", event.target.value)} />
+                          </label>
+                          <label>
+                            važ.
+                            <input type="number" min="0.5" max="3" step="0.5" value={attr.weight} onChange={(event) => updateAttribute(attr.id, "weight", event.target.value)} />
+                          </label>
+                        </div>
+                      )}
                     </th>
                   ))}
                   <th className="add-col">
@@ -407,7 +409,7 @@ function App() {
                 <>
                   <h2>{selectedCandidate.name.trim() || "Odabrani kandidat"}</h2>
                   <p className="panel-copy">
-                    Trake pokazuju koliko svaki atribut udaljava kandidata od idealnog profila. Oznaka <strong>max</strong> je atribut koji određuje Chebyshev udaljenost.
+                    Trake pokazuju koliko je iskorišten moguć raspon razlike za taj atribut. Kad je skaliranje uključeno, vidi se i doprinos koji ulazi u izračun distance.
                   </p>
                   <div className="distance-summary">
                     <div><span>Euklidska</span><strong>{formatDistance(selectedCandidate.euclidean)}</strong></div>
@@ -417,13 +419,16 @@ function App() {
                     {selectedCandidate.differences.map((item) => (
                       <div className={`contribution-row ${item.isMax ? "is-max" : ""}`} key={item.id}>
                         <div className="contribution-head">
-                          <strong>{item.label}</strong>
+        <strong>{item.label}</strong>
                           {item.isMax && <span>max</span>}
                         </div>
                         <div className="contribution-values">
                           <span>Kandidat {formatCell(item.value)}</span>
                           <span>Ideal {formatCell(item.ideal)}</span>
                           <span>Razlika {formatDistance(item.raw)}</span>
+                          {scaled && <span>Raspon {formatCell(item.range)}</span>}
+                          {scaled && <span>Važ. {formatCell(item.weight)}</span>}
+                          <span>Doprinos {formatDistance(item.weighted)}</span>
                         </div>
                         <div className="bar contribution-bar">
                           <i style={{ width: `${Math.max(4, Math.min(100, item.barWidth))}%` }}></i>
@@ -467,15 +472,19 @@ function rankCandidates(candidates, attributes, scaled) {
     const differences = usableAttributes.map((attr, index) => {
       const raw = Math.abs(Number(candidate.values[attr.id]) - Number(attr.ideal));
       const range = Math.max(1, Number(attr.max) - Number(attr.min));
+      const weight = scaled ? Number(attr.weight || 1) : 1;
       const normalized = scaled ? raw / range : raw;
-      const weighted = normalized * Number(attr.weight || 1);
+      const weighted = normalized * weight;
       return {
         id: attr.id,
         label: attr.label.trim() || `Atribut ${index + 1}`,
         value: Number(candidate.values[attr.id]),
         ideal: Number(attr.ideal),
         raw,
+        range,
+        weight,
         weighted,
+        fillRatio: scaled ? Math.min(1, raw / range) : 0,
       };
     });
     const maxWeighted = Math.max(...differences.map((item) => item.weighted), 0);
@@ -483,7 +492,9 @@ function rankCandidates(candidates, attributes, scaled) {
       .map((item) => ({
         ...item,
         isMax: maxWeighted > 0 && item.weighted === maxWeighted,
-        barWidth: maxWeighted > 0 ? (item.weighted / maxWeighted) * 100 : 0,
+        barWidth: scaled
+          ? item.fillRatio * 100
+          : (maxWeighted > 0 ? (item.weighted / maxWeighted) * 100 : 0),
       }))
       .sort((a, b) => b.weighted - a.weighted);
     return {

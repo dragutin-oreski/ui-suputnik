@@ -12,6 +12,8 @@ Alat služi kao pojednostavljena Excel-tablica u pregledniku. Početna tablica j
 
 Preklopnik `Prazno / Primjer` omogućuje povratak na početni prazan grid ili učitavanje ispunjenog primjera s kandidatima, atributima i idealnim profilom.
 
+Opcija `Skaliraj / ponderiraj` početno je isključena. Kad se uključi, u zaglavljima stupaca pojavljuju se postavke `min`, `max` i `važ.`. Zadana važnost svakog atributa je 1. Panel doprinosa tada prikazuje raspon, važnost i doprinos koji ulazi u izračun distance.
+
 ## Predloženi rad u grupama
 
 1. Upišite nazive atributa u prazna zaglavlja stupaca.
