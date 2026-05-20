@@ -555,6 +555,7 @@ function downloadExcelWorkbook({ attributes, candidates, ranked, scaled, shortfa
   const shortfallSettingCell = `$B$${settingsHeaderRow + 2}`;
   const eukCol = columnName(attributeStartCol + attributes.length);
   const chebCol = columnName(attributeStartCol + attributes.length + 1);
+  const resultById = Object.fromEntries(ranked.map((row) => [row.id, row]));
 
   const rows = [
     ["Tip", "Ime", "Bilješka", ...labels, "Euklidska", "Chebyshev", "Rang Euk", "Rang Cheb"],
@@ -583,7 +584,18 @@ function downloadExcelWorkbook({ attributes, candidates, ranked, scaled, shortfa
     ["Samo manjak", shortfallOnly ? "uključeno" : "isključeno"],
   ];
 
-  const workbookBytes = createXlsxBytes(rows);
+  const chartData = {
+    candidateStartRow,
+    candidateEndRow,
+    categories: candidates.map((candidate, index) => candidate.name.trim() || `Kandidat ${index + 1}`),
+    euclideanValues: candidates.map((candidate) => resultById[candidate.id]?.euclidean),
+    chebyshevValues: candidates.map((candidate) => resultById[candidate.id]?.chebyshev),
+    euclideanCol: eukCol,
+    chebyshevCol: chebCol,
+    chartStartCol: Math.max(attributeStartCol + attributes.length + 6, 9),
+  };
+
+  const workbookBytes = createXlsxBytes(rows, chartData);
   const blob = new Blob([workbookBytes], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
@@ -625,7 +637,7 @@ function createRankFormula(valueRef, resultCol, startRow, endRow) {
   return `IF(${valueRef}="","",RANK.EQ(${valueRef},$${resultCol}$${startRow}:$${resultCol}$${endRow},1))`;
 }
 
-function createXlsxBytes(rows) {
+function createXlsxBytes(rows, chartData = null) {
   const files = {
     "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -633,6 +645,8 @@ function createXlsxBytes(rows) {
   <Default Extension="xml" ContentType="application/xml"/>
   <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
   <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+  <Override PartName="/xl/charts/chart1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>
+  <Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>
   <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
   <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
   <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
@@ -678,6 +692,16 @@ function createXlsxBytes(rows) {
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
   <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 </Relationships>`,
+    "xl/worksheets/_rels/sheet1.xml.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/>
+</Relationships>`,
+    "xl/drawings/drawing1.xml": createDrawingXml(chartData),
+    "xl/drawings/_rels/drawing1.xml.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart1.xml"/>
+</Relationships>`,
+    "xl/charts/chart1.xml": createChartXml(chartData),
     "xl/styles.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
   <numFmts count="1"><numFmt numFmtId="164" formatCode="0.00"/></numFmts>
@@ -690,12 +714,12 @@ function createXlsxBytes(rows) {
   <dxfs count="0"/>
   <tableStyles count="0" defaultTableStyle="TableStyleMedium2" defaultPivotStyle="PivotStyleLight16"/>
 </styleSheet>`,
-    "xl/worksheets/sheet1.xml": createWorksheetXml(rows),
+    "xl/worksheets/sheet1.xml": createWorksheetXml(rows, Boolean(chartData)),
   };
   return createZip(files);
 }
 
-function createWorksheetXml(rows) {
+function createWorksheetXml(rows, includeDrawing = false) {
   const sheetRows = rows.map((row, rowIndex) => {
     const cells = row.map((value, colIndex) => createCellXml(value, rowIndex + 1, colIndex + 1, cellStyleId(rowIndex, colIndex, rows)));
     return `<row r="${rowIndex + 1}">${cells.join("")}</row>`;
@@ -705,7 +729,7 @@ function createWorksheetXml(rows) {
   const firstBlankRowIndex = rows.findIndex((row) => row.length === 0);
   const dataEndRow = firstBlankRowIndex === -1 ? rowCount : Math.max(1, firstBlankRowIndex);
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
   <dimension ref="A1:${columnName(colCount)}${rowCount}"/>
   <sheetViews><sheetView workbookViewId="0"><pane xSplit="3" ySplit="1" topLeftCell="D2" activePane="bottomRight" state="frozen"/><selection pane="bottomRight" activeCell="D2" sqref="D2"/></sheetView></sheetViews>
   <sheetFormatPr defaultRowHeight="15"/>
@@ -713,7 +737,66 @@ function createWorksheetXml(rows) {
   <sheetData>${sheetRows.join("")}</sheetData>
   <autoFilter ref="A1:${columnName(colCount)}${dataEndRow}"/>
   <pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>
+  ${includeDrawing ? `<drawing r:id="rId1"/>` : ""}
 </worksheet>`;
+}
+
+function createDrawingXml(chartData) {
+  const startCol = Math.max(0, Number(chartData?.chartStartCol || 14) - 1);
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <xdr:oneCellAnchor>
+    <xdr:from><xdr:col>${startCol}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>1</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>
+    <xdr:ext cx="7200000" cy="3600000"/>
+    <xdr:graphicFrame macro="">
+      <xdr:nvGraphicFramePr><xdr:cNvPr id="2" name="Graf udaljenosti"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>
+      <xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm>
+      <a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId1"/></a:graphicData></a:graphic>
+    </xdr:graphicFrame>
+    <xdr:clientData/>
+  </xdr:oneCellAnchor>
+</xdr:wsDr>`;
+}
+
+function createChartXml(chartData) {
+  const startRow = chartData?.candidateStartRow || 6;
+  const endRow = Math.max(startRow, chartData?.candidateEndRow || startRow);
+  const euclideanCol = chartData?.euclideanCol || "J";
+  const chebyshevCol = chartData?.chebyshevCol || "K";
+  const categoryRange = `'Rezultati'!$B$${startRow}:$B$${endRow}`;
+  const euclideanRange = `'Rezultati'!$${euclideanCol}$${startRow}:$${euclideanCol}$${endRow}`;
+  const chebyshevRange = `'Rezultati'!$${chebyshevCol}$${startRow}:$${chebyshevCol}$${endRow}`;
+  const euclideanTitle = `'Rezultati'!$${euclideanCol}$1`;
+  const chebyshevTitle = `'Rezultati'!$${chebyshevCol}$1`;
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <c:date1904 val="0"/><c:lang val="hr-HR"/><c:roundedCorners val="0"/>
+  <c:chart>
+    <c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="hr-HR" b="1" sz="1400"/><a:t>Udaljenost od idealnog (manje je bolje)</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>
+    <c:plotArea><c:layout/>
+      <c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>
+        ${createChartSeriesXml(0, "Euklidska", euclideanTitle, categoryRange, euclideanRange, chartData?.categories || [], chartData?.euclideanValues || [])}
+        ${createChartSeriesXml(1, "Chebyshev", chebyshevTitle, categoryRange, chebyshevRange, chartData?.categories || [], chartData?.chebyshevValues || [])}
+        <c:dLbls><c:showLegendKey val="0"/><c:showVal val="0"/><c:showCatName val="0"/><c:showSerName val="0"/><c:showPercent val="0"/><c:showBubbleSize val="0"/></c:dLbls>
+        <c:gapWidth val="150"/><c:axId val="10"/><c:axId val="100"/>
+      </c:barChart>
+      <c:catAx><c:axId val="10"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/><c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="hr-HR" b="1"/><a:t>Kandidat</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title><c:numFmt formatCode="General" sourceLinked="1"/><c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/><c:crossAx val="100"/><c:crosses val="autoZero"/><c:auto val="0"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/><c:noMultiLvlLbl val="0"/></c:catAx>
+      <c:valAx><c:axId val="100"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="l"/><c:majorGridlines/><c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="hr-HR" b="1"/><a:t>Distanca</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title><c:numFmt formatCode="0.00" sourceLinked="0"/><c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/><c:crossAx val="10"/><c:crosses val="autoZero"/><c:crossBetween val="between"/></c:valAx>
+    </c:plotArea>
+    <c:legend><c:legendPos val="r"/><c:overlay val="0"/></c:legend><c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/><c:showDLblsOverMax val="0"/>
+  </c:chart>
+  <c:printSettings><c:headerFooter/><c:pageMargins b="0.75" l="0.7" r="0.7" t="0.75" header="0.3" footer="0.3"/><c:pageSetup/></c:printSettings>
+</c:chartSpace>`;
+}
+
+function createChartSeriesXml(index, label, titleRef, categoryRange, valueRange, categories, values) {
+  const categoryCache = categories
+    .map((name, pointIndex) => `<c:pt idx="${pointIndex}"><c:v>${escapeXml(name)}</c:v></c:pt>`)
+    .join("");
+  const valueCache = values
+    .map((value, pointIndex) => (Number.isFinite(value) ? `<c:pt idx="${pointIndex}"><c:v>${Number(value)}</c:v></c:pt>` : ""))
+    .join("");
+  return `<c:ser><c:idx val="${index}"/><c:order val="${index}"/><c:tx><c:strRef><c:f>${titleRef}</c:f><c:strCache><c:ptCount val="1"/><c:pt idx="0"><c:v>${escapeXml(label)}</c:v></c:pt></c:strCache></c:strRef></c:tx><c:invertIfNegative val="0"/><c:cat><c:strRef><c:f>${categoryRange}</c:f><c:strCache><c:ptCount val="${categories.length}"/>${categoryCache}</c:strCache></c:strRef></c:cat><c:val><c:numRef><c:f>${valueRange}</c:f><c:numCache><c:formatCode>0.00</c:formatCode><c:ptCount val="${values.length}"/>${valueCache}</c:numCache></c:numRef></c:val></c:ser>`;
 }
 
 function cellStyleId(rowIndex, colIndex, rows) {

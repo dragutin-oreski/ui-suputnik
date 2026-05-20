@@ -23,7 +23,7 @@ Opcija `Skaliraj / ponderiraj` početno je isključena. Kad se uključi, u zagla
 5. Po potrebi dodajte ili obrišite retke.
 6. Usporedite poredak po Euklidskoj i Chebyshev udaljenosti.
 7. Promijenite jednu pretpostavku: atribut, ideal ili skaliranje.
-8. Izvezite rezultat u `.xlsx` datoteku. Export sadrži retke `Minimum`, `Maksimum` i `Važnost`, a udaljenosti i rangovi ostaju Excel formule pa se rezultat mijenja kad se u Excelu promijene ideal, kandidat ili postavke skaliranja. Radna knjiga je formatirana s čitljivim zaglavljima, zamrznutim početnim stupcima i filterom na tablici.
+8. Izvezite rezultat u `.xlsx` datoteku. Export sadrži retke `Minimum`, `Maksimum` i `Važnost`, a udaljenosti i rangovi ostaju Excel formule pa se rezultat mijenja kad se u Excelu promijene ideal, kandidat ili postavke skaliranja. Radna knjiga je formatirana s čitljivim zaglavljima, zamrznutim početnim stupcima, filterom na tablici i grafom usporedbe Euklidske i Chebyshev udaljenosti.
 
 ## Pedagoški naglasak
 
