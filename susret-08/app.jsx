@@ -547,32 +547,34 @@ function formatCell(value) {
 
 function downloadExcelWorkbook({ attributes, candidates, ranked, scaled, shortfallOnly }) {
   const labels = attributes.map((attr, index) => attr.label.trim() || `Atribut ${index + 1}`);
-  const completeRankEuclidean = [...ranked]
-    .filter((row) => row.complete)
-    .sort((a, b) => a.euclidean - b.euclidean)
-    .map((row, index) => [row.id, index + 1]);
-  const completeRankChebyshev = [...ranked]
-    .filter((row) => row.complete)
-    .sort((a, b) => a.chebyshev - b.chebyshev)
-    .map((row, index) => [row.id, index + 1]);
-  const rankEuclidean = Object.fromEntries(completeRankEuclidean);
-  const rankChebyshev = Object.fromEntries(completeRankChebyshev);
-  const resultById = Object.fromEntries(ranked.map((row) => [row.id, row]));
+  const attributeStartCol = 4;
+  const candidateStartRow = 6;
+  const candidateEndRow = candidateStartRow + candidates.length - 1;
+  const settingsHeaderRow = candidateStartRow + candidates.length + 1;
+  const scalingSettingCell = `$B$${settingsHeaderRow + 1}`;
+  const shortfallSettingCell = `$B$${settingsHeaderRow + 2}`;
+  const eukCol = columnName(attributeStartCol + attributes.length);
+  const chebCol = columnName(attributeStartCol + attributes.length + 1);
 
   const rows = [
     ["Tip", "Ime", "Bilješka", ...labels, "Euklidska", "Chebyshev", "Rang Euk", "Rang Cheb"],
     ["Idealni", "Idealni", "referentni profil", ...attributes.map((attr) => attr.ideal), "", "", "", ""],
+    ["Skaliranje", "Minimum", "", ...attributes.map((attr) => attr.min), "", "", "", ""],
+    ["Skaliranje", "Maksimum", "", ...attributes.map((attr) => attr.max), "", "", "", ""],
+    ["Skaliranje", "Važnost", "", ...attributes.map((attr) => attr.weight), "", "", "", ""],
     ...candidates.map((candidate, index) => {
-      const result = resultById[candidate.id];
+      const rowNumber = candidateStartRow + index;
+      const euclideanRef = `${eukCol}${rowNumber}`;
+      const chebyshevRef = `${chebCol}${rowNumber}`;
       return [
         "Kandidat",
         candidate.name.trim() || `Kandidat ${index + 1}`,
         candidate.note,
         ...attributes.map((attr) => candidate.values[attr.id] ?? ""),
-        result?.complete ? formatDistance(result.euclidean) : "",
-        result?.complete ? formatDistance(result.chebyshev) : "",
-        result?.complete ? rankEuclidean[candidate.id] : "",
-        result?.complete ? rankChebyshev[candidate.id] : "",
+        formulaCell(createDistanceFormula("euclidean", rowNumber, attributes.length, scalingSettingCell, shortfallSettingCell)),
+        formulaCell(createDistanceFormula("chebyshev", rowNumber, attributes.length, scalingSettingCell, shortfallSettingCell)),
+        formulaCell(createRankFormula(euclideanRef, eukCol, candidateStartRow, candidateEndRow)),
+        formulaCell(createRankFormula(chebyshevRef, chebCol, candidateStartRow, candidateEndRow)),
       ];
     }),
     [],
@@ -595,6 +597,34 @@ function downloadExcelWorkbook({ attributes, candidates, ranked, scaled, shortfa
   URL.revokeObjectURL(url);
 }
 
+function formulaCell(formula) {
+  return { type: "formula", formula };
+}
+
+function createDistanceFormula(metric, rowNumber, attributeCount, scalingSettingCell, shortfallSettingCell) {
+  if (attributeCount === 0) return `""`;
+  const firstAttributeCol = columnName(4);
+  const lastAttributeCol = columnName(3 + attributeCount);
+  const idealRange = `$${firstAttributeCol}$2:$${lastAttributeCol}$2`;
+  const rowRange = `${firstAttributeCol}${rowNumber}:${lastAttributeCol}${rowNumber}`;
+  const weightedTerms = Array.from({ length: attributeCount }, (_, index) => {
+    const col = columnName(4 + index);
+    const rawDifference = `IF(${shortfallSettingCell}="uključeno",MAX(0,${col}$2-${col}${rowNumber}),ABS(${col}${rowNumber}-${col}$2))`;
+    return `IF(${scalingSettingCell}="uključeno",(${rawDifference})/MAX(1,${col}$4-${col}$3)*${col}$5,${rawDifference})`;
+  });
+  const missingGuard = `OR(COUNT(${idealRange})<${attributeCount},COUNT(${rowRange})<${attributeCount})`;
+  const distance =
+    metric === "euclidean"
+      ? `SQRT(SUM(${weightedTerms.map((term) => `(${term})^2`).join(",")}))`
+      : `MAX(${weightedTerms.join(",")})`;
+  return `IF(${missingGuard},"",${distance})`;
+}
+
+function createRankFormula(valueRef, resultCol, startRow, endRow) {
+  if (endRow < startRow) return `""`;
+  return `IF(${valueRef}="","",RANK.EQ(${valueRef},$${resultCol}$${startRow}:$${resultCol}$${endRow},1))`;
+}
+
 function createXlsxBytes(rows) {
   const files = {
     "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -614,6 +644,7 @@ function createXlsxBytes(rows) {
   <sheets>
     <sheet name="Rezultati" sheetId="1" r:id="rId1"/>
   </sheets>
+  <calcPr calcMode="auto" fullCalcOnLoad="1" forceFullCalc="1"/>
 </workbook>`,
     "xl/_rels/workbook.xml.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
@@ -654,6 +685,9 @@ function createCellXml(value, rowIndex, colIndex, isHeader) {
   const ref = `${columnName(colIndex)}${rowIndex}`;
   const style = isHeader ? ` s="1"` : "";
   if (value === "" || value === null || value === undefined) return `<c r="${ref}"${style}/>`;
+  if (value?.type === "formula") {
+    return `<c r="${ref}"${style}><f>${escapeXml(value.formula)}</f></c>`;
+  }
   if (typeof value === "number" || (String(value).trim() !== "" && Number.isFinite(Number(value)))) {
     return `<c r="${ref}"${style}><v>${Number(value)}</v></c>`;
   }
