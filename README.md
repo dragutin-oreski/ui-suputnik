@@ -24,6 +24,10 @@ susret-07/
   index.html
   styles.css
   app.jsx
+susret-08/
+  index.html
+  styles.css
+  app.jsx
 ```
 
 The personal website deploy workflow checks out this repository and publishes `susret-01/` at:
@@ -33,6 +37,7 @@ https://dragutinoreski.com/courses/ui-suputnik/
 https://dragutinoreski.com/courses/ui-suputnik/susret-01/
 https://dragutinoreski.com/courses/ui-suputnik/susret-02/
 https://dragutinoreski.com/courses/ui-suputnik/susret-07/
+https://dragutinoreski.com/courses/ui-suputnik/susret-08/
 ```
 
 ## Agent-readable mirrors
@@ -44,6 +49,7 @@ index.html -> index.html.md
 susret-01/index.html -> susret-01/index.html.md
 susret-02/index.html -> susret-02/index.html.md
 susret-07/index.html -> susret-07/index.html.md
+susret-08/index.html -> susret-08/index.html.md
 ```
 
 When changing course content in HTML/JSX/data files, update the relevant Markdown mirror in the same change.

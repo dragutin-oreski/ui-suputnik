@@ -56,6 +56,13 @@ Svaki susret koristi isti ritam: pojam, primjer, granica, odluka. Cilj nije zapa
 - Opis: interaktive za objašnjenje što točke predstavljaju u ML primjerima, kako radi najbliži susjed, što znače Euklidska, Manhattan i Chebyshev udaljenost, kako se čita matrica distance i zašto skaliranje mijenja susjede.
 - Teme: nadzirano učenje, nenadzirano učenje, najbliži susjed, udaljenosti, Chebyshev, preporuke, matrica distance, skaliranje.
 
+### Susret 08 - Idealni zaposlenik i udaljenost od ideala
+
+- URL: https://dragutinoreski.com/courses/ui-suputnik/susret-08/
+- Markdown mirror: https://dragutinoreski.com/courses/ui-suputnik/susret-08/index.html.md
+- Opis: tablični laboratorij u kojem studenti dodaju kandidate i atribute, definiraju idealni profil te uspoređuju Euklidsku i Chebyshev udaljenost.
+- Teme: kandidati, atributi, idealni profil, Euklidska udaljenost, Chebyshev udaljenost, skaliranje, etika.
+
 ## Napomene za agente
 
 - Stranica koristi anonimnu analitiku bez identifikacije korisnika i bez snimanja sesije.
