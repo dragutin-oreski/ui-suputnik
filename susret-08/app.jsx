@@ -9,7 +9,7 @@ const createInitialAttributes = () => Array.from({ length: 4 }, createBlankAttri
 const createInitialCandidates = () => Array.from({ length: 4 }, createBlankCandidate);
 const EXAMPLE_ATTRIBUTES = [
   { id: "excel", label: "Excel", min: 1, max: 5, weight: 1, ideal: 5 },
-  { id: "python", label: "Python", min: 1, max: 5, weight: 1, ideal: 3 },
+  { id: "python", label: "Python", min: 1, max: 5, weight: 1, ideal: 4 },
   { id: "komunikacija", label: "Komunikacija", min: 1, max: 5, weight: 1, ideal: 5 },
   { id: "timski", label: "Timski rad", min: 1, max: 5, weight: 1, ideal: 4 },
   { id: "problem", label: "Rješavanje problema", min: 1, max: 5, weight: 1, ideal: 5 },
@@ -51,13 +51,14 @@ function App() {
   const [candidates, setCandidates] = useState(createInitialCandidates);
   const [metric, setMetric] = useState("euclidean");
   const [scaled, setScaled] = useState(false);
+  const [shortfallOnly, setShortfallOnly] = useState(false);
   const [tableMode, setTableMode] = useState("blank");
   const [selectedCandidateId, setSelectedCandidateId] = useState("");
 
   const activeAttributes = attributes;
   const ranked = useMemo(
-    () => rankCandidates(candidates, activeAttributes, scaled),
-    [candidates, activeAttributes, scaled]
+    () => rankCandidates(candidates, activeAttributes, scaled, shortfallOnly),
+    [candidates, activeAttributes, scaled, shortfallOnly]
   );
   const sorted = useMemo(
     () => [...ranked].sort((a, b) => metricValue(a, metric) - metricValue(b, metric)),
@@ -145,6 +146,7 @@ function App() {
     setCandidates(createInitialCandidates());
     setMetric("euclidean");
     setScaled(false);
+    setShortfallOnly(false);
     setTableMode("blank");
     setSelectedCandidateId("");
   };
@@ -154,6 +156,7 @@ function App() {
     setCandidates(cloneRows(EXAMPLE_CANDIDATES));
     setMetric("euclidean");
     setScaled(false);
+    setShortfallOnly(false);
     setTableMode("example");
     setSelectedCandidateId(EXAMPLE_CANDIDATES[0].id);
   };
@@ -164,6 +167,7 @@ function App() {
       candidates,
       ranked,
       scaled,
+      shortfallOnly,
     });
   };
 
@@ -208,10 +212,16 @@ function App() {
               Chebyshev
             </button>
           </div>
-          <label className="switch">
-            <input type="checkbox" checked={scaled} onChange={(event) => setScaled(event.target.checked)} />
-            <span>Skaliraj / ponderiraj</span>
-          </label>
+          <div className="calc-options">
+            <label className="switch">
+              <input type="checkbox" checked={scaled} onChange={(event) => setScaled(event.target.checked)} />
+              <span>Skaliraj / ponderiraj</span>
+            </label>
+            <label className="switch">
+              <input type="checkbox" checked={shortfallOnly} onChange={(event) => setShortfallOnly(event.target.checked)} />
+              <span>Samo manjak</span>
+            </label>
+          </div>
           <div className="mode-toggle" aria-label="Način rada tablice">
             <button className={tableMode === "blank" ? "is-active" : ""} onClick={resetTemplate}>Prazno</button>
             <button className={tableMode === "example" ? "is-active" : ""} onClick={loadExample}>Primjer</button>
@@ -379,7 +389,13 @@ function App() {
                 <span className="eyebrow">Rezultat</span>
                 <h2>Poredak kandidata</h2>
               </div>
-              <p>{metric === "euclidean" ? "Euklidska mjeri ukupnu udaljenost od ideala." : "Chebyshev mjeri najveću pojedinačnu razliku od ideala."}</p>
+              <p>
+                {shortfallOnly
+                  ? "U načinu Samo manjak vrijednost iznad ideala ne povećava udaljenost."
+                  : metric === "euclidean"
+                    ? "Euklidska mjeri ukupnu udaljenost od ideala."
+                    : "Chebyshev mjeri najveću pojedinačnu razliku od ideala."}
+              </p>
             </div>
             <div className="rank-list">
               {sorted.filter((candidate) => candidate.complete).map((candidate, index) => {
@@ -409,7 +425,9 @@ function App() {
                 <>
                   <h2>{selectedCandidate.name.trim() || "Odabrani kandidat"}</h2>
                   <p className="panel-copy">
-                    Trake pokazuju koliko je iskorišten moguć raspon razlike za taj atribut. Kad je skaliranje uključeno, vidi se i doprinos koji ulazi u izračun distance.
+                    {shortfallOnly
+                      ? "U ovom načinu ideal čitamo kao minimalni prag: višak se ne kažnjava, a udaljenost nastaje samo kad kandidat ne doseže dogovorenu razinu."
+                      : "Trake pokazuju koliko je iskorišten moguć raspon razlike za taj atribut. Kad je skaliranje uključeno, vidi se i doprinos koji ulazi u izračun distance."}
                   </p>
                   <div className="distance-summary">
                     <div><span>Euklidska</span><strong>{formatDistance(selectedCandidate.euclidean)}</strong></div>
@@ -425,7 +443,7 @@ function App() {
                         <div className="contribution-values">
                           <span>Kandidat {formatCell(item.value)}</span>
                           <span>Ideal {formatCell(item.ideal)}</span>
-                          <span>Razlika {formatDistance(item.raw)}</span>
+                          <span>{shortfallOnly ? "Manjak" : "Razlika"} {formatDistance(item.raw)}</span>
                           {scaled && <span>Raspon {formatCell(item.range)}</span>}
                           {scaled && <span>Važ. {formatCell(item.weight)}</span>}
                           <span>Doprinos {formatDistance(item.weighted)}</span>
@@ -460,7 +478,7 @@ function App() {
   );
 }
 
-function rankCandidates(candidates, attributes, scaled) {
+function rankCandidates(candidates, attributes, scaled, shortfallOnly) {
   const usableAttributes = attributes.filter((attr) => isFiniteNumber(attr.ideal));
   return candidates.map((candidate) => {
     const complete =
@@ -470,7 +488,9 @@ function rankCandidates(candidates, attributes, scaled) {
       return { ...candidate, complete: false, euclidean: Number.POSITIVE_INFINITY, chebyshev: Number.POSITIVE_INFINITY };
     }
     const differences = usableAttributes.map((attr, index) => {
-      const raw = Math.abs(Number(candidate.values[attr.id]) - Number(attr.ideal));
+      const candidateValue = Number(candidate.values[attr.id]);
+      const idealValue = Number(attr.ideal);
+      const raw = shortfallOnly ? Math.max(0, idealValue - candidateValue) : Math.abs(candidateValue - idealValue);
       const range = Math.max(1, Number(attr.max) - Number(attr.min));
       const weight = scaled ? Number(attr.weight || 1) : 1;
       const normalized = scaled ? raw / range : raw;
@@ -478,8 +498,8 @@ function rankCandidates(candidates, attributes, scaled) {
       return {
         id: attr.id,
         label: attr.label.trim() || `Atribut ${index + 1}`,
-        value: Number(candidate.values[attr.id]),
-        ideal: Number(attr.ideal),
+        value: candidateValue,
+        ideal: idealValue,
         raw,
         range,
         weight,
@@ -525,7 +545,7 @@ function formatCell(value) {
   return Number(value).toLocaleString("hr-HR", { maximumFractionDigits: 2 });
 }
 
-function downloadExcelWorkbook({ attributes, candidates, ranked, scaled }) {
+function downloadExcelWorkbook({ attributes, candidates, ranked, scaled, shortfallOnly }) {
   const labels = attributes.map((attr, index) => attr.label.trim() || `Atribut ${index + 1}`);
   const completeRankEuclidean = [...ranked]
     .filter((row) => row.complete)
@@ -558,6 +578,7 @@ function downloadExcelWorkbook({ attributes, candidates, ranked, scaled }) {
     [],
     ["Postavka", "Vrijednost"],
     ["Skaliranje", scaled ? "uključeno" : "isključeno"],
+    ["Samo manjak", shortfallOnly ? "uključeno" : "isključeno"],
   ];
 
   const workbookBytes = createXlsxBytes(rows);

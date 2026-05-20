@@ -185,6 +185,10 @@ p { margin: 0; }
   font-weight: 700;
 }
 .switch input { width: 18px; height: 18px; accent-color: var(--accent); }
+.calc-options {
+  display: grid;
+  gap: 7px;
+}
 .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .primary-actions { justify-content: flex-start; }
 .secondary-actions { justify-content: flex-end; }
