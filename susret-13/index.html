@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>UI Suputnik · Susret 13 · Regresija, K-means i stabla odlučivanja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script defer src="/analytics.js"></script>
+<style>
+  :root{
+    --paper:#f3ede1; --paper-2:#ebe3d2; --paper-3:#e2d8c2;
+    --card:#fbf7ec; --ink:#1a1814; --ink-2:#3a352c; --muted:#6f6754;
+    --line:#cfc4ac; --line-2:#b8ab8e;
+    --accent:#6b4f1d; --accent-soft:#c9a566; --accent-wash:#efe3c7;
+    --good:#2a5d57; --good-wash:#dde9e6;
+    --warn:#8a3a1f; --warn-wash:#ecd6c8;
+    --c1:#6b4f1d; --c2:#2a5d57; --c3:#8a3a1f; --c4:#9a7a16;
+    --serif:"Source Serif 4","Iowan Old Style","Charter",Georgia,serif;
+    --sans:"Manrope",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);
+       font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.18;
+       mix-blend-mode:multiply;z-index:0;
+       background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.09  0 0 0 0 0.07  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");}
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 clamp(18px,3vw,40px);}
+  button,input,textarea,select{font:inherit;color:inherit;}
+  button{cursor:pointer;}
+  h1,h2,h3{font-family:var(--serif);font-weight:400;line-height:1.15;letter-spacing:0;}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid currentColor;}
+  a:hover{color:var(--ink);}
+  code{font-family:var(--mono);font-size:.9em;background:var(--paper-2);padding:1px 5px;border-radius:4px;}
+  ::selection{background:var(--accent-wash);color:var(--ink);}
+
+  /* ---------- TOPBAR ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:24px;
+    padding:24px 0 18px;border-bottom:1px solid var(--line);margin-bottom:4px;}
+  .brand{display:flex;align-items:center;gap:14px;color:inherit;border-bottom:0;text-decoration:none;}
+  .brand-mark{display:inline-grid;place-items:center;width:36px;height:36px;border:1.5px solid var(--ink);
+    border-radius:50%;background:var(--card);font-family:var(--serif);font-size:18px;font-style:italic;}
+  .brand-name{display:block;font-family:var(--serif);font-size:19px;line-height:1.1;}
+  .brand-meta{display:block;color:var(--muted);font-family:var(--mono);font-size:12px;}
+  .topbar-right{display:flex;flex-wrap:wrap;gap:18px;color:var(--muted);font-family:var(--mono);font-size:12px;}
+  .topbar-right a{color:var(--muted);border-bottom-color:transparent;}
+  .topbar-right a:hover{color:var(--ink);border-bottom-color:var(--ink);}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:48px 0 36px;border-bottom:1px solid var(--line);position:relative;}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+          color:var(--accent);font-weight:600;}
+  .hero h1{font-size:clamp(38px,6.5vw,68px);margin:14px 0 6px;max-width:16ch;letter-spacing:-.01em;line-height:1.02;}
+  .hero h1 em{font-style:italic;color:var(--accent);}
+  .lede{font-family:var(--serif);font-size:clamp(19px,2.2vw,24px);max-width:48ch;color:var(--ink-2);
+        font-style:italic;margin:16px 0 26px;line-height:1.42;}
+  .uses{display:flex;flex-wrap:wrap;gap:8px;}
+  .use{background:var(--card);border:1px solid var(--line);color:var(--ink-2);padding:5px 12px;border-radius:100px;
+       font-family:var(--mono);font-size:11.5px;letter-spacing:.02em;}
+  .floatword{position:absolute;font-family:var(--serif);font-style:italic;color:rgba(26,24,20,.06);
+             font-size:120px;font-weight:400;top:34px;right:-6px;pointer-events:none;
+             user-select:none;display:none;}
+  @media(min-width:900px){.floatword{display:block;}}
+
+  section{padding:48px 0;border-bottom:1px solid var(--line);}
+  .sec-tag{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+           color:var(--muted);font-weight:600;margin-bottom:8px;}
+  section h2{font-size:clamp(26px,3vw,36px);margin:0 0 10px;letter-spacing:-.01em;}
+  section .intro{max-width:64ch;color:var(--ink-2);margin-bottom:26px;font-size:16px;line-height:1.6;}
+
+  /* ---------- PITANJA (steps) ---------- */
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:20px;position:relative;}
+  .step .ic{font-size:24px;}
+  .step h3{font-size:19px;margin:10px 0 6px;font-weight:500;}
+  .step p{font-size:14px;color:var(--muted);margin:0;line-height:1.5;}
+  .step .algo{font-family:var(--mono);font-size:11.5px;color:var(--accent);font-weight:600;margin-top:10px;display:block;}
+
+  /* ---------- WIDGET ---------- */
+  .widget{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:24px;margin-top:8px;}
+  .wlab{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+        color:var(--muted);display:block;margin-bottom:10px;}
+  canvas{width:100%;height:auto;background:var(--paper);border:1px solid var(--line);border-radius:8px;display:block;}
+  .ctrls{display:flex;flex-wrap:wrap;gap:16px 22px;align-items:center;margin:16px 0 4px;}
+  .ctrl{display:flex;flex-direction:column;gap:5px;min-width:160px;}
+  .ctrl label{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;}
+  .ctrl .val{color:var(--accent);font-weight:700;}
+  input[type=range]{accent-color:var(--accent);width:100%;}
+  .wbtns{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .wbtns button,.seg button{font-size:14px;font-weight:600;border:0;border-radius:8px;padding:9px 16px;}
+  .btn-prim{background:var(--accent);color:var(--card);}
+  .btn-prim:hover{background:var(--ink);}
+  .btn-ghost{background:transparent;color:var(--ink-2);border:1px solid var(--line) !important;}
+  .btn-ghost:hover{border-color:var(--ink) !important;color:var(--ink);}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .seg button{background:var(--paper);border-radius:0;border-right:1px solid var(--line) !important;}
+  .seg button:last-child{border-right:0 !important;}
+  .seg button.on{background:var(--accent);color:var(--card);}
+  .toggle{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12.5px;color:var(--ink-2);}
+  .toggle input{accent-color:var(--accent);width:16px;height:16px;}
+  .readout{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+  .stat{background:var(--paper-2);border:1px solid var(--line);border-radius:8px;padding:9px 13px;min-width:120px;}
+  .stat .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);display:block;}
+  .stat .v{font-family:var(--serif);font-size:21px;color:var(--ink);}
+  .stat.good .v{color:var(--good);} .stat.warn .v{color:var(--warn);} .stat.acc .v{color:var(--accent);}
+  .hintline{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--ink-2);
+        background:var(--accent-wash);border-left:3px solid var(--accent);padding:9px 13px;border-radius:0 6px 6px 0;margin-top:14px;}
+  .legend{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:10px;display:flex;flex-wrap:wrap;gap:14px;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .dotc{width:11px;height:11px;border-radius:50%;display:inline-block;}
+
+  /* ---------- TREE ---------- */
+  .treewrap{overflow-x:auto;}
+  .tree{min-width:560px;}
+  .tnode{fill:var(--card);stroke:var(--line-2);stroke-width:1.5;}
+  .tnode.on{fill:var(--accent-wash);stroke:var(--accent);stroke-width:2.5;}
+  .tleaf-yes{fill:var(--good-wash);stroke:var(--good);}
+  .tleaf-no{fill:var(--warn-wash);stroke:var(--warn);}
+  .tleaf-yes.on,.tleaf-no.on{stroke-width:3;}
+  .tedge{stroke:var(--line-2);stroke-width:2;fill:none;}
+  .tedge.on{stroke:var(--accent);stroke-width:3.5;}
+  .ttxt{font-family:var(--sans);font-size:13px;fill:var(--ink);}
+  .ttxt.b{font-weight:700;}
+  .tlbl{font-family:var(--mono);font-size:11px;fill:var(--muted);}
+
+  /* ---------- QUIZ ---------- */
+  .quiz{display:grid;gap:16px;}
+  .q{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:20px;}
+  .q .qt{font-family:var(--serif);font-size:19px;margin-bottom:12px;}
+  .opts{display:grid;gap:9px;}
+  .opt{text-align:left;font-size:15px;background:var(--paper);border:1px solid var(--line);
+       border-radius:8px;padding:11px 15px;transition:.12s;}
+  .opt:hover{border-color:var(--ink);}
+  .opt.correct{background:var(--good-wash);border-color:var(--good);color:var(--good);font-weight:600;}
+  .opt.wrong{background:var(--warn-wash);border-color:var(--warn);color:var(--warn);}
+  .opt:disabled{cursor:default;}
+  .fb{font-size:14px;margin-top:11px;font-weight:600;display:none;}
+  .fb.show{display:block;}
+  .fb.ok{color:var(--good);} .fb.no{color:var(--warn);}
+  .score{font-family:var(--serif);font-size:21px;margin-top:10px;}
+
+  .note{background:var(--accent-wash);border-radius:8px;padding:16px 20px;font-size:15px;color:var(--ink-2);
+        margin-top:22px;border-left:4px solid var(--accent);}
+
+  footer{padding:36px 0 60px;text-align:center;color:var(--muted);font-size:13px;font-family:var(--mono);}
+  footer .sent{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--ink);margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar">
+    <a class="brand" href="../">
+      <span class="brand-mark" aria-hidden="true">D</span>
+      <span>
+        <span class="brand-name">Dragutin Oreški</span>
+        <span class="brand-meta">UI Suputnik · Susret 13</span>
+      </span>
+    </a>
+    <nav class="topbar-right">
+      <a href="../">← Susreti</a>
+    </nav>
+  </header>
+
+  <header class="hero">
+    <div class="floatword">model</div>
+    <p class="kicker">Klasa 13 · Umjetna inteligencija</p>
+    <h1>Tri algoritma,<br><em>tri pitanja</em></h1>
+    <p class="lede">Ista tablica podataka, tri različita pitanja. Regresija pita
+      „koliko?”, klasteriranje „koje grupe?”, a stablo odlučivanja „hoće li — i
+      zašto?”. Ovdje ih ne čitaš nego ih pomičeš, pokrećeš i gledaš kako uče.</p>
+    <div class="uses">
+      <span class="use">📈 Predvidi broj</span>
+      <span class="use">🎯 Pronađi grupe</span>
+      <span class="use">🌳 Donesi odluku</span>
+    </div>
+  </header>
+
+  <!-- TRI PITANJA -->
+  <section>
+    <p class="sec-tag">Pregled</p>
+    <h2>Jedna tablica, tri pitanja</h2>
+    <p class="intro">Zamisli tablicu o studentima ili kupcima. Ovisno o tome što
+      želiš saznati, biraš drugi algoritam. To je cijela poanta današnjeg susreta —
+      ne „koji je najbolji”, nego „koji odgovara mojem pitanju”.</p>
+    <div class="steps">
+      <div class="step"><span class="ic">📈</span><h3>Koliko?</h3>
+        <p>Predviđamo <b>broj</b> — npr. koliko bodova za 6 sati učenja. Tražimo pravac koji najbolje opisuje odnos.</p>
+        <span class="algo">→ Linearna / logistička regresija</span></div>
+      <div class="step"><span class="ic">🎯</span><h3>Koje grupe?</h3>
+        <p>Bez ikakvih oznaka tražimo <b>prirodne skupine</b> u podacima — npr. segmente kupaca koje nitko nije unaprijed zadao.</p>
+        <span class="algo">→ K-means klasteriranje</span></div>
+      <div class="step"><span class="ic">🌳</span><h3>Hoće li, i zašto?</h3>
+        <p>Donosimo <b>odluku kroz niz pitanja</b> i možemo objasniti svaki korak — npr. tko je preživio Titanic.</p>
+        <span class="algo">→ Stablo odlučivanja</span></div>
+    </div>
+  </section>
+
+  <!-- WIDGET 1: REGRESIJA -->
+  <section>
+    <p class="sec-tag">Algoritam 1 · regresija</p>
+    <h2>Pronađi najbolji pravac</h2>
+    <p class="intro">Točke su stvarni podaci: <b>sati učenja → bodovi na ispitu</b>.
+      Pomiči klizače <b>a</b> (gdje pravac siječe os) i <b>b</b> (nagib) i gledaj
+      kako se mijenja <b>ukupna greška</b> — zbroj kvadrata razmaka od svake točke
+      do pravca. Cilj: smanji grešku što više možeš, pa usporedi s pravim rješenjem.</p>
+
+    <div class="widget">
+      <span class="wlab">y = a + b · x &nbsp;·&nbsp; sati učenja → bodovi</span>
+      <canvas id="regCv" width="660" height="380"></canvas>
+      <div class="ctrls">
+        <div class="ctrl">
+          <label>a — presjek (intercept): <span class="val" id="aVal">10.0</span></label>
+          <input type="range" id="aRng" min="0" max="50" step="0.5" value="10">
+        </div>
+        <div class="ctrl">
+          <label>b — nagib (po satu): <span class="val" id="bVal">1.0</span></label>
+          <input type="range" id="bRng" min="0" max="6" step="0.1" value="1">
+        </div>
+      </div>
+      <div class="wbtns">
+        <button class="btn-prim" id="regBest">✨ Pokaži najbolji pravac</button>
+        <label class="toggle"><input type="checkbox" id="regRes" checked> prikaži greške (reziduali)</label>
+      </div>
+      <div class="readout">
+        <div class="stat warn"><span class="k">Tvoja greška (SSE)</span><span class="v" id="sseYou">—</span></div>
+        <div class="stat good"><span class="k">Najmanja moguća</span><span class="v" id="sseBest">—</span></div>
+        <div class="stat acc"><span class="k">Tvoj pravac</span><span class="v" id="eqYou" style="font-size:16px">—</span></div>
+      </div>
+      <div class="hintline" id="regHint">Pomakni klizače pa gledaj crvene crtice — to su greške modela za svaku točku.</div>
+    </div>
+  </section>
+
+  <!-- WIDGET 2: K-MEANS -->
+  <section>
+    <p class="sec-tag">Algoritam 2 · klasteriranje</p>
+    <h2>Gledaj kako k-means pronalazi grupe</h2>
+    <p class="intro">Svaka točka je kupac: vodoravno <b>dob</b>, okomito <b>godišnja
+      potrošnja</b>. Klikni <b>Korak</b> da vidiš jednu iteraciju (dodjela točaka
+      najbližem centru → pomak centra), ili <b>Pokreni</b> do kraja. Promijeni
+      <b>K</b>, i — najvažnije — uključi <b>Normiraj</b> pa gledaj kako se grupe
+      <i>prerasporede</i>: bez normiranja potrošnja (veliki brojevi) nadglasa dob.</p>
+
+    <div class="widget">
+      <span class="wlab">⬤ točke = kupci &nbsp;·&nbsp; ✚ = centroidi klastera</span>
+      <canvas id="kmCv" width="660" height="400"></canvas>
+      <div class="ctrls">
+        <div class="ctrl" style="min-width:auto">
+          <label>Broj klastera K</label>
+          <div class="seg" id="kSeg">
+            <button data-k="2">2</button><button data-k="3" class="on">3</button><button data-k="4">4</button>
+          </div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="kmNorm"> Normiraj osi (Standardize)</label>
+      </div>
+      <div class="wbtns" style="margin-top:6px">
+        <button class="btn-prim" id="kmStep">▶ Korak</button>
+        <button class="btn-ghost" id="kmRun">⏩ Pokreni do kraja</button>
+        <button class="btn-ghost" id="kmReset">↻ Novi centroidi</button>
+      </div>
+      <div class="readout">
+        <div class="stat acc"><span class="k">Iteracija</span><span class="v" id="kmIter">0</span></div>
+        <div class="stat"><span class="k">Faza</span><span class="v" id="kmPhase" style="font-size:16px">—</span></div>
+        <div class="stat good"><span class="k">Stanje</span><span class="v" id="kmStable" style="font-size:16px">u tijeku</span></div>
+      </div>
+      <div class="hintline" id="kmHint">Klikni „Korak” — prvo se točke oboje prema najbližem centru, zatim se centri pomaknu.</div>
+    </div>
+  </section>
+
+  <!-- WIDGET 3: STABLO -->
+  <section>
+    <p class="sec-tag">Algoritam 3 · stablo odlučivanja</p>
+    <h2>Tko je preživio Titanic?</h2>
+    <p class="intro">Odaberi profil putnika i klikni <b>Predvidi</b>. Stablo će
+      zasvijetliti put kroz pitanja do konačne odluke — baš kao što ga je algoritam
+      naučio iz pravih podataka. Uoči: model nije čitao povijest, a ipak je
+      „otkrio” pravilo <i>žene i djeca prvi</i>.</p>
+
+    <div class="widget">
+      <div class="ctrls" style="margin-top:0">
+        <div class="ctrl" style="min-width:auto">
+          <label>Spol</label>
+          <div class="seg" id="segSpol">
+            <button data-v="z" class="on">žensko</button><button data-v="m">muško</button>
+          </div>
+        </div>
+        <div class="ctrl" style="min-width:auto">
+          <label>Dob</label>
+          <div class="seg" id="segDob">
+            <button data-v="dijete">dijete (&lt;13)</button><button data-v="odrasla" class="on">odrasla osoba</button>
+          </div>
+        </div>
+        <div class="ctrl" style="min-width:auto">
+          <label>Putnički razred</label>
+          <div class="seg" id="segRazred">
+            <button data-v="1" class="on">1.</button><button data-v="2">2.</button><button data-v="3">3.</button>
+          </div>
+        </div>
+      </div>
+      <div class="wbtns" style="margin:6px 0 16px">
+        <button class="btn-prim" id="trPredict">🔎 Predvidi</button>
+      </div>
+      <div class="treewrap">
+        <svg class="tree" id="treeSvg" viewBox="0 0 660 360" width="660" height="360"></svg>
+      </div>
+      <div class="readout">
+        <div class="stat"><span class="k">Predviđanje</span><span class="v" id="trOut" style="font-size:18px">—</span></div>
+        <div class="stat acc"><span class="k">Vjerojatnost</span><span class="v" id="trProb">—</span></div>
+      </div>
+      <div class="hintline" id="trHint">Odaberi profil pa klikni „Predvidi” da vidiš put kroz stablo.</div>
+    </div>
+  </section>
+
+  <!-- KVIZ -->
+  <section>
+    <p class="sec-tag">Provjeri se</p>
+    <h2>Kratki kviz</h2>
+    <p class="intro">Četiri pitanja, odgovor odmah. Klikni na opciju koju misliš da je točna.</p>
+    <div class="quiz" id="quiz"></div>
+    <div class="score" id="score"></div>
+
+    <div class="note">
+      <strong>Želiš dalje?</strong> Sve ovo radi se „za prave” u <b>Orange Data Mining</b> —
+      widgeti <code>Linear Regression</code>, <code>k-Means</code> i <code>Tree</code> rade
+      točno ono što si gore vidio/la, samo na cijelim skupovima podataka (Iris, Titanic,
+      student-performance). To je sljedeća vježba.
+    </div>
+  </section>
+
+  <footer>
+    <p class="sent">„Koliko? Koje grupe? Hoće li, i zašto?”</p>
+    <p>Klasa 13 — Regresija, K-means i stabla odlučivanja · Umjetna inteligencija (Algebra)<br>
+    Radi offline u pregledniku. Brojke su poučne, ne službene statistike.</p>
+  </footer>
+
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+/* ============================================================
+   WIDGET 1 — LINEARNA REGRESIJA
+   ============================================================ */
+(function(){
+  const cv=$('regCv'), ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height, PAD=48;
+  // podaci: (sati, bodovi) — grubo oko y = 25 + 2.8x
+  const DATA=[[1,29],[2,31],[3,33],[4,39],[5,37],[6,43],[7,46],[8,45],
+              [9,53],[10,54],[11,55],[12,61],[13,60],[14,65]];
+  const XMAX=15, YMAX=80;
+  // najmanji kvadrati
+  let n=DATA.length, sx=0,sy=0,sxy=0,sxx=0;
+  DATA.forEach(([x,y])=>{sx+=x;sy+=y;sxy+=x*y;sxx+=x*x;});
+  const bBest=(n*sxy-sx*sy)/(n*sxx-sx*sx);
+  const aBest=(sy-bBest*sx)/n;
+  function sse(a,b){return DATA.reduce((s,[x,y])=>{const e=y-(a+b*x);return s+e*e;},0);}
+  const sseBest=sse(aBest,bBest);
+
+  function px(x){return PAD + x/XMAX*(W-PAD-16);}
+  function py(y){return H-PAD - y/YMAX*(H-PAD-16);}
+
+  function draw(){
+    const a=parseFloat($('aRng').value), b=parseFloat($('bRng').value);
+    ctx.clearRect(0,0,W,H);
+    // mreža + osi
+    ctx.strokeStyle='#d8cdb4'; ctx.lineWidth=1; ctx.fillStyle='#6f6754';
+    ctx.font='11px JetBrains Mono';
+    for(let gx=0;gx<=XMAX;gx+=3){ctx.beginPath();ctx.moveTo(px(gx),py(0));ctx.lineTo(px(gx),py(YMAX));ctx.stroke();
+      ctx.textAlign='center';ctx.fillText(gx,px(gx),H-PAD+16);}
+    for(let gy=0;gy<=YMAX;gy+=20){ctx.beginPath();ctx.moveTo(px(0),py(gy));ctx.lineTo(px(XMAX),py(gy));ctx.stroke();
+      ctx.textAlign='right';ctx.fillText(gy,PAD-8,py(gy)+4);}
+    ctx.strokeStyle='#8a8064';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(px(0),py(0));ctx.lineTo(px(XMAX),py(0));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(px(0),py(0));ctx.lineTo(px(0),py(YMAX));ctx.stroke();
+    ctx.fillStyle='#3a352c';ctx.textAlign='center';
+    ctx.fillText('sati učenja (x)',W/2,H-12);
+    ctx.save();ctx.translate(14,H/2);ctx.rotate(-Math.PI/2);ctx.fillText('bodovi (y)',0,0);ctx.restore();
+    // reziduali
+    if($('regRes').checked){
+      ctx.strokeStyle='rgba(138,58,31,.55)';ctx.lineWidth=1.5;
+      DATA.forEach(([x,y])=>{const yp=a+b*x;ctx.beginPath();ctx.moveTo(px(x),py(y));ctx.lineTo(px(x),py(yp));ctx.stroke();});
+    }
+    // najbolji pravac (sablast)
+    if(showBest){
+      ctx.strokeStyle='rgba(42,93,87,.9)';ctx.lineWidth=2.5;ctx.setLineDash([7,5]);
+      ctx.beginPath();ctx.moveTo(px(0),py(aBest));ctx.lineTo(px(XMAX),py(aBest+bBest*XMAX));ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    // korisnikov pravac
+    ctx.strokeStyle='#6b4f1d';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(px(0),py(a));ctx.lineTo(px(XMAX),py(Math.min(a+b*XMAX,YMAX*1.5)));ctx.stroke();
+    // točke
+    DATA.forEach(([x,y])=>{ctx.fillStyle='#1a1814';ctx.beginPath();ctx.arc(px(x),py(y),4.5,0,7);ctx.fill();
+      ctx.fillStyle='#fbf7ec';ctx.beginPath();ctx.arc(px(x),py(y),1.6,0,7);ctx.fill();});
+    // readout
+    const s=sse(a,b);
+    $('aVal').textContent=a.toFixed(1);$('bVal').textContent=b.toFixed(1);
+    $('sseYou').textContent=Math.round(s);
+    $('sseBest').textContent=Math.round(sseBest);
+    $('eqYou').textContent='y = '+a.toFixed(1)+' + '+b.toFixed(1)+'·x';
+    const ratio=s/sseBest;
+    if(ratio<1.05) $('regHint').textContent='🎯 Odlično! Praktički si pogodio/la pravac najmanjih kvadrata.';
+    else if(ratio<1.5) $('regHint').textContent='Vruće — greška je blizu najmanje moguće. Fino dotjeraj nagib.';
+    else $('regHint').textContent='Crvene crtice su greške za svaku točku. Smanji njihov ukupni kvadrat.';
+  }
+  let showBest=false;
+  $('aRng').oninput=draw; $('bRng').oninput=draw; $('regRes').onchange=draw;
+  $('regBest').onclick=()=>{showBest=true;$('aRng').value=aBest.toFixed(1);$('bRng').value=bBest.toFixed(1);
+    draw();$('regHint').textContent='Zelena iscrtkana linija = pravac najmanjih kvadrata (y = '+aBest.toFixed(2)+' + '+bBest.toFixed(2)+'·x). To je „strojno učenje” u jednom retku.';};
+  draw();
+})();
+
+/* ============================================================
+   WIDGET 2 — K-MEANS
+   ============================================================ */
+(function(){
+  const cv=$('kmCv'), ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height, PAD=44;
+  const COL=['#6b4f1d','#2a5d57','#8a3a1f','#9a7a16'];
+  // tri prirodne grupe u (dob, potrošnja) — različitih raspona
+  function rnd(m,s){return m + (Math.random()+Math.random()+Math.random()-1.5)*s;}
+  let PTS=[];
+  function genPts(){
+    PTS=[];
+    const blobs=[[24,2500,3,700],[40,6500,5,900],[58,3500,4,800]];
+    blobs.forEach(([md,mp,sd,sp])=>{for(let i=0;i<20;i++)PTS.push({d:rnd(md,sd*1.3),p:rnd(mp,sp),c:-1});});
+  }
+  genPts();
+  const dMin=15,dMax=68, pMin=800,pMax=9200;
+  function nx(v,mn,mx){return (v-mn)/(mx-mn);}            // 0..1
+  function px(d){return PAD + nx(d,dMin,dMax)*(W-PAD-18);}
+  function py(p){return H-PAD - nx(p,pMin,pMax)*(H-PAD-18);}
+
+  let K=3, cents=[], iter=0, phase='init', stable=false;
+  function initCents(){
+    cents=[];const idx=new Set();
+    while(cents.length<K){const i=Math.floor(Math.random()*PTS.length);
+      if(!idx.has(i)){idx.add(i);cents.push({d:PTS[i].d,p:PTS[i].p});}}
+    PTS.forEach(pt=>pt.c=-1); iter=0; phase='init'; stable=false;
+    updReadout(); draw();
+  }
+  // udaljenost: ovisi o normiranju
+  function dist(pt,c,norm){
+    if(norm){const dd=nx(pt.d,dMin,dMax)-nx(c.d,dMin,dMax);
+             const dp=nx(pt.p,pMin,pMax)-nx(c.p,pMin,pMax);return dd*dd+dp*dp;}
+    const dd=pt.d-c.d, dp=pt.p-c.p; return dd*dd+dp*dp;
+  }
+  function assign(){
+    const norm=$('kmNorm').checked; let changed=false;
+    PTS.forEach(pt=>{let best=0,bd=1e18;
+      cents.forEach((c,ci)=>{const v=dist(pt,c,norm);if(v<bd){bd=v;best=ci;}});
+      if(pt.c!==best){changed=true;pt.c=best;}});
+    return changed;
+  }
+  function move(){
+    let moved=false;
+    cents.forEach((c,ci)=>{const grp=PTS.filter(p=>p.c===ci);
+      if(grp.length){const nd=grp.reduce((s,p)=>s+p.d,0)/grp.length;
+        const np=grp.reduce((s,p)=>s+p.p,0)/grp.length;
+        if(Math.abs(nd-c.d)>0.01||Math.abs(np-c.p)>0.5)moved=true;
+        c.d=nd;c.p=np;}});
+    return moved;
+  }
+  function step(){
+    if(stable)return;
+    if(phase==='init'||phase==='moved'){ assign(); phase='assigned'; }
+    else { const moved=move(); iter++; phase='moved'; if(!moved){stable=true;} }
+    updReadout(); draw();
+  }
+  function updReadout(){
+    $('kmIter').textContent=iter;
+    $('kmPhase').textContent = phase==='assigned'?'dodjela':(phase==='init'?'start':'pomak centra');
+    $('kmStable').textContent = stable?'stabilno ✓':'u tijeku';
+    $('kmStable').parentElement.className = 'stat '+(stable?'good':'');
+    if(stable)$('kmHint').textContent='✓ Centri se više ne miču — algoritam je konvergirao. Promijeni K ili uključi „Normiraj” i kreni ponovno.';
+    else if(phase==='assigned')$('kmHint').textContent='Svaka točka je obojena bojom najbližeg centra. Sad klikni opet — centri se pomiču u sredinu svoje grupe.';
+    else if(phase==='moved')$('kmHint').textContent='Centri su se pomaknuli. Ponovi „Korak” dok se ne smire.';
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='#d8cdb4';ctx.lineWidth=1;ctx.fillStyle='#6f6754';ctx.font='11px JetBrains Mono';
+    ctx.strokeRect(PAD,18,W-PAD-18,H-PAD-18);
+    ctx.textAlign='center';ctx.fillStyle='#3a352c';
+    ctx.fillText('dob →',W/2,H-12);
+    ctx.save();ctx.translate(14,H/2);ctx.rotate(-Math.PI/2);ctx.fillText('godišnja potrošnja →',0,0);ctx.restore();
+    // točke
+    PTS.forEach(pt=>{ctx.fillStyle=pt.c<0?'#b8ab8e':COL[pt.c];
+      ctx.beginPath();ctx.arc(px(pt.d),py(pt.p),5,0,7);ctx.fill();});
+    // centroidi
+    cents.forEach((c,ci)=>{const x=px(c.d),y=py(c.p);ctx.strokeStyle=COL[ci];ctx.lineWidth=3.5;
+      ctx.beginPath();ctx.moveTo(x-9,y);ctx.lineTo(x+9,y);ctx.moveTo(x,y-9);ctx.lineTo(x,y+9);ctx.stroke();
+      ctx.fillStyle='rgba(251,247,236,.85)';ctx.beginPath();ctx.arc(x,y,5,0,7);ctx.fill();
+      ctx.strokeStyle=COL[ci];ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,5,0,7);ctx.stroke();});
+  }
+  // kontrole
+  $('kSeg').onclick=e=>{if(e.target.dataset.k){[...$('kSeg').children].forEach(b=>b.classList.remove('on'));
+    e.target.classList.add('on');K=+e.target.dataset.k;initCents();}};
+  $('kmNorm').onchange=initCents;
+  $('kmStep').onclick=step;
+  $('kmReset').onclick=initCents;
+  let timer=null;
+  $('kmRun').onclick=()=>{if(timer){clearInterval(timer);timer=null;return;}
+    timer=setInterval(()=>{step();if(stable){clearInterval(timer);timer=null;}},420);};
+  initCents();
+})();
+
+/* ============================================================
+   WIDGET 3 — STABLO ODLUČIVANJA (Titanic)
+   ============================================================ */
+(function(){
+  const svg=$('treeSvg');
+  // čvorovi: id, x,y,w, tekst, tip
+  const N={
+    root:{x:250,y:14,w:160,t:'Spol?',k:'q'},
+    zRaz:{x:70,y:120,w:150,t:'Razred?',k:'q'},
+    mDob:{x:430,y:120,w:150,t:'Dob?',k:'q'},
+    zYes:{x:20,y:250,w:130,t:'preživjela',k:'yes'},
+    zMid:{x:175,y:250,w:130,t:'preživjela?',k:'yes'},
+    mChildRaz:{x:330,y:250,w:150,t:'Razred?',k:'q'},
+    mNo:{x:510,y:250,w:130,t:'nije',k:'no'},
+    cYes:{x:300,y:330,w:110,t:'preživio',k:'yes',small:1},
+    cNo:{x:420,y:330,w:110,t:'nije',k:'no',small:1}
+  };
+  const E=[ // [from,to,label, side]
+    ['root','zRaz','žensko'],['root','mDob','muško'],
+    ['zRaz','zYes','1./2.'],['zRaz','zMid','3.'],
+    ['mDob','mChildRaz','dijete'],['mDob','mNo','odrasla'],
+    ['mChildRaz','cYes','1./2.'],['mChildRaz','cNo','3.']
+  ];
+  function cx(n){return N[n].x+N[n].w/2;}
+  function render(active){
+    active=active||{nodes:[],edges:[]};
+    let s='';
+    // edges
+    E.forEach(([f,t,lb])=>{const x1=cx(f),y1=N[f].y+ (N[f].small?26:40),x2=cx(t),y2=N[t].y;
+      const my=(y1+y2)/2; const on=active.edges.includes(f+'>'+t);
+      s+='<path class="tedge'+(on?' on':'')+'" d="M'+x1+' '+y1+' C '+x1+' '+my+' '+x2+' '+my+' '+x2+' '+y2+'"/>';
+      s+='<text class="tlbl" x="'+((x1+x2)/2)+'" y="'+(my-2)+'" text-anchor="middle">'+lb+'</text>';});
+    // nodes
+    for(const id in N){const n=N[id];const h=n.small?26:40;const cls=
+      n.k==='yes'?'tleaf-yes':n.k==='no'?'tleaf-no':'tnode';
+      const on=active.nodes.includes(id)?' on':'';
+      s+='<rect class="'+cls+on+'" x="'+n.x+'" y="'+n.y+'" width="'+n.w+'" height="'+h+'" rx="9"/>';
+      s+='<text class="ttxt'+(n.k!=='q'?' b':'')+'" x="'+cx(id)+'" y="'+(n.y+h/2+4.5)+'" text-anchor="middle">'+n.t+'</text>';}
+    svg.innerHTML=s;
+  }
+  function predict(){
+    const spol=sel('segSpol'), dob=sel('segDob'), raz=sel('segRazred');
+    let nodes=['root'], edges=[], out, prob;
+    if(spol==='z'){
+      nodes.push('zRaz'); edges.push('root>zRaz');
+      if(raz==='1'||raz==='2'){nodes.push('zYes');edges.push('zRaz>zYes');out='Preživjela';prob='≈ 0,93';}
+      else{nodes.push('zMid');edges.push('zRaz>zMid');out='Preživjela (tijesno)';prob='≈ 0,50';}
+    } else {
+      nodes.push('mDob'); edges.push('root>mDob');
+      if(dob==='dijete'){
+        nodes.push('mChildRaz');edges.push('mDob>mChildRaz');
+        if(raz==='1'||raz==='2'){nodes.push('cYes');edges.push('mChildRaz>cYes');out='Preživio';prob='≈ 1,00';}
+        else{nodes.push('cNo');edges.push('mChildRaz>cNo');out='Nije preživio';prob='≈ 0,66 (nije)';}
+      } else {nodes.push('mNo');edges.push('mDob>mNo');out='Nije preživio';prob='≈ 0,85 (nije)';}
+    }
+    render({nodes,edges});
+    $('trOut').textContent=out; $('trProb').textContent=prob;
+    $('trOut').style.color = out.startsWith('Preživ')?'var(--good)':'var(--warn)';
+    $('trHint').textContent='Osvijetljeni put = niz pitanja koja je model postavio. Svako predviđanje je ovako sljedivo — zato kažemo da je stablo „interpretabilno”.';
+  }
+  function sel(id){const b=$(id).querySelector('.on');return b?b.dataset.v:null;}
+  function segClick(id){$(id).onclick=e=>{if(e.target.dataset.v){[...$(id).children].forEach(b=>b.classList.remove('on'));e.target.classList.add('on');}};}
+  segClick('segSpol');segClick('segDob');segClick('segRazred');
+  $('trPredict').onclick=predict;
+  render();
+})();
+
+/* ============================================================
+   KVIZ
+   ============================================================ */
+(function(){
+  const QUIZ=[
+   {q:"U jednadžbi y = a + b·x, što znači koeficijent b?",
+    a:["Za koliko se promijeni y kad x poraste za 1 (nagib)",
+       "Vrijednost y kad je x jednak nuli",
+       "Ukupnu grešku modela"],
+    correct:0,
+    why:"b je nagib — npr. „svaki dodatni sat učenja donosi +2,8 boda”. a je presjek (vrijednost kad je x=0)."},
+   {q:"Zašto prije k-meansa često normiramo (skaliramo) varijable?",
+    a:["Da algoritam radi brže",
+       "Da varijabla s velikim rasponom (npr. potrošnja) ne nadglasa onu s malim (npr. dob)",
+       "Da dobijemo više klastera"],
+    correct:1,
+    why:"K-means mjeri udaljenost; bez skaliranja stupac s velikim brojevima dominira i grupira gotovo samo po njemu."},
+   {q:"Koja je glavna prednost stabla odlučivanja pred „crnom kutijom” poput neuronske mreže?",
+    a:["Uvijek je točnije",
+       "Ne treba podatke",
+       "Možeš objasniti ZAŠTO je donijelo svaku odluku (interpretabilnost)"],
+    correct:2,
+    why:"Stablo je niz čitljivih IF-THEN pravila — možeš pokazati točan put do odluke, što je ključno npr. u bankama i medicini."},
+   {q:"Stablo je savršeno na podacima za učenje, ali loše na novima. Što se dogodilo?",
+    a:["Prekomjerno učenje (overfitting) — zapamtilo je i šum",
+       "Nedovoljno učenje — premalo je naučilo",
+       "Normiranje je zakazalo"],
+    correct:0,
+    why:"Predubokо stablo „nabuba” trening pa ne generalizira. Lijek: pliće stablo, rezanje grana ili nasumična šuma."}
+  ];
+  let answered=0, right=0;
+  const quizEl=$('quiz');
+  QUIZ.forEach((item,qi)=>{
+    const d=document.createElement('div');d.className='q';
+    d.innerHTML='<div class="qt">'+(qi+1)+'. '+item.q+'</div>';
+    const opts=document.createElement('div');opts.className='opts';
+    item.a.forEach((txt,oi)=>{
+      const b=document.createElement('button');b.className='opt';b.textContent=txt;
+      b.onclick=()=>{[...opts.children].forEach(x=>x.disabled=true);
+        const fb=d.querySelector('.fb');
+        if(oi===item.correct){b.classList.add('correct');right++;fb.className='fb show ok';fb.textContent='✔ Točno! '+item.why;}
+        else{b.classList.add('wrong');opts.children[item.correct].classList.add('correct');
+             fb.className='fb show no';fb.textContent='✗ Netočno. '+item.why;}
+        answered++;
+        if(answered===QUIZ.length)$('score').textContent='Rezultat: '+right+' / '+QUIZ.length;
+      };
+      opts.appendChild(b);
+    });
+    d.appendChild(opts);
+    const fb=document.createElement('div');fb.className='fb';d.appendChild(fb);
+    quizEl.appendChild(d);
+  });
+})();
+</script>
+</body>
+</html>
